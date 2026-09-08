@@ -11,7 +11,7 @@ A personal video learning app, shaped around what you know and where you get stu
 - A tutor beside each video, with saved conversations and clickable timestamp references.
 - A Markdown learner profile, selected Obsidian notes, pasted discussions, and ChatGPT / Claude JSON export imports.
 - Codex and Claude Code providers using your installed, signed-in CLIs. No separate model API key required by the app.
-- Configurable system speech (default) or Piper. Rendering and speech run locally.
+- Local neural narration with Kokoro, six voice choices, speed control, and an audio preview. System speech and Piper remain available.
 - A shared CLI and companion skills so an agent can add lessons using the context of your current conversation.
 
 Lessons can combine diagrams, typeset equations, plots, code walkthroughs, processes, concepts, and comparisons. Auto chooses representations scene by scene; optional presentation preferences and visual directions guide the result. Colors are configured separately. It does not generate cinematic footage, upload to YouTube, or silently synchronize account memory.
@@ -31,7 +31,7 @@ learnvid doctor
 npm start                      # opens the local browser app
 ```
 
-On a Mac with Homebrew, `brew install ffmpeg` installs the media tools. macOS includes the default speech engine. Open **Settings & connections** to choose Codex or Claude, check installed tools, or change narration.
+On a Mac with Homebrew, `brew install ffmpeg` installs the media tools. Kokoro downloads its model on first use; macOS system speech is also available. Open **Settings & connections** to choose Codex or Claude, check installed tools, or change narration.
 
 To open a desktop window instead:
 
@@ -113,6 +113,8 @@ Lesson Library/
     transcript.md
     captions.vtt
     chat.json
+  .models/kokoro/               cached neural speech model
+  .previews/                    cached voice previews
   .jobs/                       temporary agent workspaces
 ```
 
@@ -122,9 +124,12 @@ The server listens on loopback only. Browser writes require a per-instance token
 
 ## Speech and output
 
-- **Default:** macOS `say`, with a voice name and speaking pace in Settings. List voices using `say -v '?'`. On Linux the system adapter expects `espeak`.
+- **Default for new libraries: Kokoro.** The app bundles the speech runtime and six US/British English voice choices. First use downloads approximately 100 MB of model files to `~/Lesson Library/.models/kokoro`; subsequent generation works offline. No speech API key or Python environment is needed. Choose a voice and speed in Settings, then select **Preview voice**. Preview uses the current form values without saving them.
+- **System speech:** macOS `say`, with a voice name and speaking pace in Settings. List voices using `say -v '?'`. On Linux the system adapter expects `espeak`.
 - **Piper:** install the `piper` executable and a compatible `.onnx` voice model plus its configuration, then select its absolute model path in Settings. This adapter is implemented but has not yet been tested on a machine with Piper installed.
 - **Output:** 1280×720 H.264 / AAC MP4, approximately timed WebVTT captions, and a Markdown transcript. Chapter boundaries use measured speech durations; captions divide words across those durations, so they are not word-aligned transcription.
+
+Existing libraries retain their explicitly saved speech engine; choose Kokoro and save Settings to switch. Existing videos keep their original audio. New libraries default to Kokoro’s Heart voice at 1× speed.
 
 The first version is oriented to English lessons. Linux system speech and Windows desktop packaging are not yet validated.
 
@@ -157,3 +162,10 @@ learnvid create "Motion" --plan examples/motion.json --style auto --wait
 ```
 
 The [visual schema](plugins/lesson-library/skills/lesson-library/references/visuals.md) documents the agent-authored content formats. Finished thumbnails come from the lesson's first visual.
+
+Kokoro uses the [official Kokoro.js implementation](https://github.com/hexgrad/kokoro/tree/main/kokoro.js) and the [ONNX model distribution](https://huggingface.co/onnx-community/Kokoro-82M-v1.0-ONNX). The model and speech library have Apache 2.0 licenses; dependency licenses remain with their respective packages. The app uses quantized CPU inference and splits long narration into bounded chunks to avoid tokenizer truncation. Narration text is not sent to a speech service.
+
+```sh
+learnvid voices
+learnvid speech-preview --output /tmp/voice-preview.wav
+```

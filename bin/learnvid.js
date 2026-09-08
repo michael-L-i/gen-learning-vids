@@ -12,6 +12,8 @@ import {
   retryLesson,
 } from "../server/engine.js";
 import { doctor } from "../server/providers.js";
+import { speak } from "../server/speech.js";
+import { kokoroVoices, speechPreviewText } from "../server/speech-options.js";
 import { textFromExport, scanNotes, importNotes } from "../server/imports.js";
 
 const { values, positionals } = parseArgs({
@@ -19,6 +21,7 @@ const { values, positionals } = parseArgs({
   options: {
     library: { type: "string" },
     port: { type: "string" },
+    output: { type: "string" },
     dev: { type: "boolean" },
     open: { type: "boolean" },
     wait: { type: "boolean" },
@@ -63,6 +66,8 @@ learnvid import-notes DIRECTORY RELATIVE_PATH...
 learnvid profile [FILE]                      Read profile, or replace with FILE
 learnvid settings [FILE]                     Read settings, or replace with JSON FILE
 learnvid doctor
+learnvid voices
+learnvid speech-preview [--output FILE]
 learnvid open
 
 All commands accept --library PATH (or LEARNVID_HOME). Default: ~/Lesson Library.
@@ -155,6 +160,20 @@ Creation runs in the background unless --wait is provided. Source files are copi
         print({ status: "queued" });
       }
       break;
+    case "voices":
+      print(kokoroVoices);
+      break;
+    case "speech-preview": {
+      const output = path.resolve(
+        values.output || path.join(library.root, ".previews", "sample.wav"),
+      );
+      await fs.mkdir(path.dirname(output), { recursive: true });
+      await speak(speechPreviewText, output, await library.settings(), {
+        cacheDir: path.join(library.root, ".models", "kokoro"),
+      });
+      print({ file: output });
+      break;
+    }
     case "doctor":
       print({
         library: library.root,

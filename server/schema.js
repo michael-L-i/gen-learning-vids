@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { kokoroVoices } from "./speech-options.js";
 import { zodToJsonSchema } from "zod-to-json-schema";
 
 export const presentations = ["auto", "worked", "diagram", "code", "slides"];
@@ -8,7 +9,9 @@ const palette = z.enum(["auto", "paper", "midnight", "sage"]);
 export const settingsSchema = z.object({
   provider: z.enum(["codex", "claude"]).default("codex"),
   model: z.string().max(120).default(""),
-  tts: z.enum(["system", "piper"]).default("system"),
+  tts: z.enum(["kokoro", "system", "piper"]).default("kokoro"),
+  kokoroVoice: z.enum(kokoroVoices.map((v) => v.id)).default("af_heart"),
+  speechSpeed: z.number().min(0.75).max(1.5).default(1),
   voice: z.string().max(120).default(""),
   speechRate: z.number().int().min(100).max(260).default(175),
   piperModel: z.string().max(1000).default(""),

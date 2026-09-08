@@ -27,6 +27,7 @@ import {
   X,
 } from "lucide-react";
 import "./styles.css";
+import { kokoroVoices } from "../server/speech-options.js";
 
 const presentationOptions = [
   ["auto", "Auto — adapt to the lesson"],
@@ -1370,6 +1371,8 @@ function Profile({ notify }) {
 function Settings({ bootstrap, update, notify }) {
   const [settings, setSettings] = useState(bootstrap.settings),
     [tools, setTools] = useState(null),
+    [preview, setPreview] = useState(""),
+    [previewBusy, setPreviewBusy] = useState(false),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
   const refreshTools = () =>
@@ -1379,7 +1382,26 @@ function Settings({ bootstrap, update, notify }) {
   useEffect(() => {
     refreshTools();
   }, []);
-  const change = (key, value) => setSettings({ ...settings, [key]: value });
+  const previewVersion = useRef(0);
+  const change = (key, value) => {
+    setSettings({ ...settings, [key]: value });
+    setPreview("");
+    previewVersion.current++;
+  };
+  const previewVoice = async () => {
+    const version = ++previewVersion.current;
+    setPreviewBusy(true);
+    setError("");
+    setPreview("");
+    try {
+      const result = await post("/speech/preview", { settings });
+      if (version === previewVersion.current) setPreview(result.url);
+    } catch (e) {
+      if (version === previewVersion.current) setError(e.message);
+    } finally {
+      setPreviewBusy(false);
+    }
+  };
   return (
     <div className="page narrow-page">
       <div className="page-heading">
@@ -1446,10 +1468,7 @@ function Settings({ bootstrap, update, notify }) {
             <SlidersHorizontal size={21} />
             <div>
               <h2>Narration</h2>
-              <p>
-                System speech is ready on macOS. Use Piper for another local
-                voice.
-              </p>
+              <p>Select a voice and preview it before creating a video.</p>
             </div>
           </div>
           <div className="two-fields">
@@ -1460,11 +1479,27 @@ function Settings({ bootstrap, update, notify }) {
                 value={settings.tts}
                 onChange={(e) => change("tts", e.target.value)}
               >
+                <option value="kokoro">Kokoro — local neural speech</option>
                 <option value="system">System speech (macOS / eSpeak)</option>
                 <option value="piper">Piper (local model)</option>
               </select>
             </label>
-            {settings.tts === "system" ? (
+            {settings.tts === "kokoro" ? (
+              <label className="field">
+                Voice
+                <select
+                  aria-label="Narration voice"
+                  value={settings.kokoroVoice}
+                  onChange={(e) => change("kokoroVoice", e.target.value)}
+                >
+                  {kokoroVoices.map((v) => (
+                    <option key={v.id} value={v.id}>
+                      {v.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : settings.tts === "system" ? (
               <label className="field">
                 Voice name <span className="optional">Optional</span>
                 <input
@@ -1483,6 +1518,53 @@ function Settings({ bootstrap, update, notify }) {
                   placeholder="/path/to/voice.onnx"
                 />
               </label>
+            )}
+          </div>
+          {settings.tts === "kokoro" && (
+            <>
+              <p className="fine-print">
+                The first use downloads a speech model (about 100 MB). After
+                that, narration runs offline on your computer. No API key is
+                needed.
+              </p>
+              <label className="field range-field">
+                Speed <span>{settings.speechSpeed.toFixed(2)}×</span>
+                <input
+                  aria-label="Narration speed"
+                  type="range"
+                  min="0.75"
+                  max="1.5"
+                  step="0.05"
+                  value={settings.speechSpeed}
+                  onChange={(e) =>
+                    change("speechSpeed", Number(e.target.value))
+                  }
+                />
+              </label>
+            </>
+          )}
+          <div className="speech-preview">
+            <button
+              type="button"
+              className="secondary"
+              disabled={previewBusy}
+              onClick={previewVoice}
+            >
+              {previewBusy ? (
+                <LoaderCircle size={16} className="spin" />
+              ) : (
+                <Video size={16} />
+              )}{" "}
+              {previewBusy ? "Preparing preview…" : "Preview voice"}
+            </button>
+            {preview && (
+              <audio
+                aria-label="Voice preview"
+                key={preview}
+                src={preview}
+                controls
+                autoPlay
+              />
             )}
           </div>
           {settings.tts === "system" && (

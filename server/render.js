@@ -3,6 +3,7 @@ import path from "node:path";
 import sharp from "sharp";
 import { run } from "./process.js";
 import { atomicWrite } from "./store.js";
+import { speak } from "./speech.js";
 
 import { palettes, escapeXml, wrap, textLines } from "./visual-utils.js";
 import { contentSvg, frameCount, resolvePalette } from "./visuals.js";
@@ -63,38 +64,6 @@ export function captions(scenes) {
   }
   return "WEBVTT\n\n" + cues.join("\n\n") + "\n";
 }
-async function speak(text, output, settings) {
-  if (settings.tts === "piper") {
-    if (!settings.piperModel)
-      throw new Error(
-        "Choose a Piper voice model in Settings before generating a lesson.",
-      );
-    await run(
-      "piper",
-      ["--model", settings.piperModel, "--output_file", output],
-      { input: text },
-    );
-  } else if (process.platform === "darwin") {
-    const input = output + ".txt";
-    await atomicWrite(input, text);
-    const args = [
-      "-f",
-      input,
-      "-o",
-      output,
-      "--data-format=LEI16@22050",
-      "-r",
-      String(settings.speechRate),
-    ];
-    if (settings.voice) args.push("-v", settings.voice);
-    await run("say", args);
-    await fs.unlink(input);
-  } else {
-    const args = ["-w", output, "-s", String(settings.speechRate), "--stdin"];
-    if (settings.voice) args.push("-v", settings.voice);
-    await run("espeak", args, { input: text });
-  }
-}
 export async function renderLesson(
   library,
   lesson,
@@ -122,7 +91,9 @@ export async function renderLesson(
     );
     const audio = path.join(render, `scene-${i}.wav`);
     const clip = path.join(render, `scene-${i}.mp4`);
-    await synthesize(scene.narration, audio, settings);
+    await synthesize(scene.narration, audio, settings, {
+      cacheDir: path.join(library.root, ".models", "kokoro"),
+    });
     const { stdout } = await run("ffprobe", [
       "-v",
       "error",

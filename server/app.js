@@ -2,13 +2,19 @@ import express from "express";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { randomBytes, randomUUID } from "node:crypto";
+import { randomBytes, randomUUID, createHash } from "node:crypto";
 import { Library, atomicWrite } from "./store.js";
 import { doctor } from "./providers.js";
+import { speak } from "./speech.js";
+import { settingsSchema } from "./schema.js";
+import { speechPreviewText } from "./speech-options.js";
 import { createLesson, startWorker, retryLesson, askLesson } from "./engine.js";
 import { scanNotes, importNotes, textFromExport } from "./imports.js";
 
-export async function createApp(library, { dev = false } = {}) {
+export async function createApp(
+  library,
+  { dev = false, synthesize = speak } = {},
+) {
   await library.init();
   const app = express();
   const token = randomBytes(32).toString("hex");
@@ -59,6 +65,66 @@ export async function createApp(library, { dev = false } = {}) {
   app.get(
     "/api/doctor",
     wrap(async (_, res) => res.json(await doctor())),
+  );
+  const previews = new Map();
+  app.post(
+    "/api/speech/preview",
+    wrap(async (req, res) => {
+      const settings = settingsSchema.parse(req.body.settings);
+      const id = createHash("sha256")
+        .update(
+          JSON.stringify({
+            tts: settings.tts,
+            voice: settings.voice,
+            kokoroVoice: settings.kokoroVoice,
+            speed: settings.speechSpeed,
+            rate: settings.speechRate,
+            piper: settings.piperModel,
+            text: speechPreviewText,
+          }),
+        )
+        .digest("hex");
+      const file = path.join(library.root, ".previews", id + ".wav");
+      if (!previews.has(id)) {
+        const task = (async () => {
+          try {
+            await fs.access(file);
+          } catch (e) {
+            if (e.code !== "ENOENT") throw e;
+            await fs.mkdir(path.dirname(file), {
+              recursive: true,
+              mode: 0o700,
+            });
+            const temporary = path.join(
+              path.dirname(file),
+              `${id}.${randomUUID()}.wav`,
+            );
+            try {
+              await synthesize(speechPreviewText, temporary, settings, {
+                cacheDir: path.join(library.root, ".models", "kokoro"),
+              });
+              await fs.rename(temporary, file);
+            } finally {
+              await fs.rm(temporary, { force: true });
+            }
+          }
+        })();
+        previews.set(id, task);
+        task.finally(() => previews.delete(id)).catch(() => {});
+      }
+      await previews.get(id);
+      res.json({ url: `/api/speech/previews/${id}.wav` });
+    }),
+  );
+  app.get(
+    "/api/speech/previews/:file",
+    wrap(async (req, res) => {
+      if (!/^[a-f0-9]{64}\.wav$/.test(req.params.file))
+        return res.status(404).json({ error: "Preview not found." });
+      res.sendFile(path.join(library.root, ".previews", req.params.file), {
+        dotfiles: "allow",
+      });
+    }),
   );
   app.get(
     "/api/lessons",
@@ -236,9 +302,14 @@ export async function createApp(library, { dev = false } = {}) {
   });
   return app;
 }
-export async function startServer({ root, port = 4317, dev = false } = {}) {
+export async function startServer({
+  root,
+  port = 4317,
+  dev = false,
+  synthesize,
+} = {}) {
   const library = new Library(root);
-  const app = await createApp(library, { dev });
+  const app = await createApp(library, { dev, synthesize });
   const server = await new Promise((resolve, reject) => {
     const s = app.listen(port, "127.0.0.1", () => resolve(s));
     s.once("error", reject);

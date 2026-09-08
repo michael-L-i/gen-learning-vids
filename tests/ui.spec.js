@@ -3,11 +3,17 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { startServer } from "../server/app.js";
+import { pcmWave } from "../server/speech.js";
 
 let instance, root;
 test.beforeAll(async () => {
   root = await fs.mkdtemp(path.join(os.tmpdir(), "lesson-ui-"));
-  instance = await startServer({ root, port: 0 });
+  instance = await startServer({
+    root,
+    port: 0,
+    synthesize: async (_, file) =>
+      fs.writeFile(file, pcmWave(new Float32Array(2400))),
+  });
 });
 test.afterAll(async () => {
   await instance?.close();
@@ -109,4 +115,30 @@ test("navigation and creation remain usable on a narrow screen", async ({
   ).toBe(true);
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
+});
+
+test("voice preview uses the selected voice without saving the form", async ({
+  page,
+}) => {
+  await page.goto(instance.url);
+  await page
+    .getByRole("button", { name: "Settings & connections", exact: true })
+    .click();
+  await page
+    .getByLabel("Speech engine", { exact: true })
+    .selectOption("kokoro");
+  await page
+    .getByLabel("Narration voice", { exact: true })
+    .selectOption("bf_emma");
+  const response = page.waitForResponse((r) =>
+    r.url().endsWith("/api/speech/preview"),
+  );
+  await page
+    .getByRole("button", { name: "Preview voice", exact: true })
+    .click();
+  expect((await response).request().postDataJSON().settings.kokoroVoice).toBe(
+    "bf_emma",
+  );
+  await expect(page.getByLabel("Voice preview", { exact: true })).toBeVisible();
+  expect((await instance.library.settings()).kokoroVoice).toBe("af_heart");
 });

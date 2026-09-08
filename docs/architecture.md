@@ -26,7 +26,9 @@ Existing plans survive rendering failure. Retry captures current speech/provider
 - `server/store.js`: directory layout, atomic files, locks, configuration.
 - `server/imports.js`: selective Markdown imports and chat-export normalization.
 - `server/providers.js`: headless Codex/Claude adapters and instructional prompts.
-- `server/render.js`: speech, visual layouts, media encoding, transcripts.
+- `server/render.js`: timed visual sequences, media encoding, transcripts.
+- `server/visuals.js`: equations, code, diagrams, and plots from validated content.
+- `server/speech.js`: local neural/system/Piper narration, bounded text chunks, and model caching.
 - `server/engine.js`: creation, jobs, retries, and saved Q&A.
 - `server/app.js`: loopback HTTP interface used by both UI shells.
 - `bin/learnvid.js`: structured terminal interface for people and agents.
@@ -40,7 +42,13 @@ The provider interface accepts the full supplied lesson context, but the app cap
 2. Comprehension responses and explicit feedback as evidence for future lessons. Watching alone must never imply mastery.
 3. Source search and opt-in note refresh with clear provenance and change previews.
 4. A storyboard review/editor before rendering and richer topic-specific visual components.
-5. Better speech preview and optional forced-alignment captions.
+5. Optional forced-alignment captions and narration-aware visual reveal timing.
 6. Notarized desktop releases, tested Linux support, and installation without a source checkout.
 
 Avoid making direct ChatGPT memory access a prerequisite: it is neither implemented nor needed for the shared-folder design. Conversation briefs and user-selected notes make useful personalization possible now.
+
+## Neural narration
+
+Kokoro loads lazily, so starting the UI does not download models or allocate an inference session. Its quantized ONNX model is cached inside the library. The six bundled voice presets are selected independently of legacy system voice names. Requests reuse a loaded model within a process and serialize inference against that session. Long narration is split before phonemization to avoid silent input truncation.
+
+Voice previews are generated from unsaved settings, cached by configuration, and atomically published as WAV files. They share the same speech engine as video jobs. Tests inject a small audio fixture so CI verifies preview behavior without contacting a model service or downloading weights. A separate real local run verified cached generation with network requests disabled.
