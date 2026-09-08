@@ -1,0 +1,18 @@
+{
+  "name": "lesson-library",
+  "version": "0.1.0",
+  "description": "Lesson Library plugin",
+  "author": {
+    "name": "Local developer"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Lesson Library",
+    "shortDescription": "Use Lesson Library in Codex.",
+    "longDescription": "Lesson Library adds a local Codex plugin scaffold.",
+    "developerName": "Local developer",
+    "category": "Productivity",
+    "capabilities": [],
+    "defaultPrompt": "Help me use Lesson Library."
+  }
+}
