@@ -1,0 +1,17 @@
+node_modules/
+dist/
+release/
+.env
+.env.*
+!.env.example
+.DS_Store
+coverage/
+test-results/
+playwright-report/
+.local/
+library/
+*.log
+*.mp4
+*.aiff
+*.wav
+*.dmg
