@@ -7,7 +7,6 @@ import {
   BookOpen,
   Check,
   CheckCircle2,
-  ChevronRight,
   CircleHelp,
   Clock3,
   FileText,
@@ -71,26 +70,6 @@ function ErrorMessage({ message }) {
     </div>
   ) : null;
 }
-function EmptyIllustration() {
-  return (
-    <div className="empty-art" aria-hidden="true">
-      <div className="art-sheet sheet-back" />
-      <div className="art-sheet sheet-front">
-        <span>YOUR NEXT GOOD QUESTION</span>
-        <div className="orbit">
-          <i />
-          <i />
-          <i />
-        </div>
-        <div className="art-lines">
-          <i />
-          <i />
-        </div>
-        <div className="art-play">▶</div>
-      </div>
-    </div>
-  );
-}
 function Modal({ title, eyebrow, close, children, wide = false }) {
   const ref = useRef(null);
   useEffect(() => {
@@ -140,7 +119,7 @@ function Modal({ title, eyebrow, close, children, wide = false }) {
       >
         <div className="modal-top">
           <div>
-            <span className="eyebrow">{eyebrow}</span>
+            {eyebrow && <span className="eyebrow">{eyebrow}</span>}
             <h2>{title}</h2>
           </div>
           <IconButton label="Close dialog" onClick={close}>
@@ -213,11 +192,7 @@ function App() {
           <span className="brand-mark">
             <BookOpen size={23} />
           </span>
-          <span>
-            Lesson
-            <br />
-            Library<span className="brand-dot">.</span>
-          </span>
+          <span>Lesson Library</span>
         </button>
         <button
           className="primary sidebar-create"
@@ -225,7 +200,6 @@ function App() {
         >
           <Plus size={18} /> Create a lesson
         </button>
-        <div className="nav-caption">YOUR SPACE</div>
         <nav aria-label="Main navigation">
           {[
             ["library", Grid2X2, "Video library"],
@@ -243,14 +217,6 @@ function App() {
             </button>
           ))}
         </nav>
-        <div className="sidebar-note">
-          <span className="small-line" />
-          <p>
-            A place for things
-            <br />
-            you want to understand.
-          </p>
-        </div>
         <div className="sidebar-bottom">
           <button
             className={page === "settings" ? "nav-item active" : "nav-item"}
@@ -258,22 +224,9 @@ function App() {
           >
             <Settings2 size={19} /> Settings & connections
           </button>
-          <div className="local-indicator">
-            <span /> Your library, on this computer
-          </div>
         </div>
       </aside>
       <main className="main">
-        <div className="topbar">
-          <span>PERSONAL LEARNING SPACE</span>
-          <button
-            className="text-button terminal-link"
-            onClick={() => navigate("settings")}
-          >
-            <Terminal size={15} /> Works with your terminal{" "}
-            <ChevronRight size={14} />
-          </button>
-        </div>
         {selected ? (
           <LessonDetail
             id={selected}
@@ -338,11 +291,7 @@ function Catalog({ lessons, open, create }) {
     <div className="page catalog-page">
       <div className="page-heading">
         <div>
-          <div className="eyebrow">FOLLOW YOUR CURIOSITY</div>
-          <h1>
-            Your video library<span className="heading-dot">.</span>
-          </h1>
-          <p>Good questions become lessons worth keeping.</p>
+          <h1>Video library</h1>
         </div>
         <button className="primary" onClick={create}>
           <Plus size={18} /> New lesson
@@ -359,18 +308,17 @@ function Catalog({ lessons, open, create }) {
             {Math.round(
               lessons.reduce((sum, l) => sum + (l.duration || 0), 0) / 60,
             )}{" "}
-            minutes to explore
+            minutes total
           </span>
-          <span className="summary-end">MADE FOR YOUR UNDERSTANDING</span>
         </div>
       )}
       <div className="library-toolbar">
         <div className="filter-tabs" aria-label="Filter lessons">
           {[
             ["all", "All lessons"],
-            ["ready", "Ready to watch"],
+            ["ready", "Ready"],
             ["working", "In progress"],
-            ["error", "Needs attention"],
+            ["error", "Failed"],
           ].map(([id, label]) => (
             <button
               key={id}
@@ -393,29 +341,16 @@ function Catalog({ lessons, open, create }) {
       </div>
       {!lessons.length ? (
         <div className="empty-library">
-          <EmptyIllustration />
-          <div className="eyebrow">THE FIRST PAGE IS YOURS</div>
-          <h2>
-            What would you like
-            <br />
-            to understand?
-          </h2>
-          <p>
-            Start with a question, a note, or a concept that hasn’t clicked.
-            <br />
-            We’ll turn it into a lesson you can watch and talk through.
-          </p>
+          <h2>No videos yet</h2>
+          <p>Create a lesson to add a video to your library.</p>
           <button className="primary" onClick={create}>
             Create your first lesson <ArrowRight size={18} />
           </button>
-          <div className="empty-foot">
-            <FileText size={15} /> Bring your notes. Keep the explanation.
-          </div>
         </div>
       ) : !filtered.length ? (
         <div className="empty-small">
           <Search size={28} />
-          <h2>No lessons here yet</h2>
+          <h2>No matching lessons</h2>
           <p>Try a different search or filter.</p>
           <button
             className="secondary"
@@ -453,14 +388,12 @@ function Catalog({ lessons, open, create }) {
                     {isWorking(lesson.status) && (
                       <LoaderCircle size={13} className="spin" />
                     )}
-                    {lesson.status === "error"
-                      ? "Needs attention"
-                      : "Making your lesson"}
+                    {lesson.status === "error" ? "Failed" : "Generating"}
                   </span>
                 )}
               </div>
               <div className="card-meta">
-                <span>{lesson.tags[0] || "PERSONAL LESSON"}</span>
+                <span>{lesson.tags[0] || "Lesson"}</span>
                 <span>{date(lesson.createdAt)}</span>
               </div>
               <h3>{lesson.title}</h3>
@@ -469,7 +402,7 @@ function Catalog({ lessons, open, create }) {
                 {lesson.status === "ready" ? (
                   <>
                     <span>
-                      <FileText size={13} /> Transcript included
+                      <FileText size={13} /> Transcript
                     </span>
                     <ArrowRight size={16} />
                   </>
@@ -484,10 +417,6 @@ function Catalog({ lessons, open, create }) {
           ))}
         </div>
       )}
-      <div className="catalog-bottom">
-        <span>Made around your questions. Saved in your library.</span>
-        <span>LESSON LIBRARY · LOCAL EDITION</span>
-      </div>
     </div>
   );
 }
@@ -519,12 +448,7 @@ function CreateLesson({ sources, defaultStyle, close, created }) {
     }
   };
   return (
-    <Modal
-      title="Start with a good question."
-      eyebrow="A LESSON, JUST FOR YOU"
-      close={close}
-      wide
-    >
+    <Modal title="Create lesson" close={close} wide>
       <form onSubmit={submit}>
         <label className="field">
           What would you like to understand?
@@ -550,7 +474,7 @@ function CreateLesson({ sources, defaultStyle, close, created }) {
           />
         </label>
         <div className="field">
-          Bring some context <span className="optional">Optional</span>
+          Sources <span className="optional">Optional</span>
           {sources.length ? (
             <div className="source-picker">
               {sources.map((s) => (
@@ -575,8 +499,8 @@ function CreateLesson({ sources, defaultStyle, close, created }) {
             <div className="subtle-box">
               <FolderOpen size={18} />
               <span>
-                Add notes in Sources & notes whenever you’re ready. Your
-                learning profile will be included automatically.
+                No sources added. Your learning profile is included
+                automatically.
               </span>
             </div>
           )}
@@ -596,9 +520,9 @@ function CreateLesson({ sources, defaultStyle, close, created }) {
           Choose a visual style
           <div className="style-picker">
             {[
-              ["paper", "Paper", "Warm & considered"],
-              ["midnight", "Midnight", "Quiet & focused"],
-              ["sage", "Field notes", "Fresh & grounded"],
+              ["paper", "Paper", "Light"],
+              ["midnight", "Midnight", "Dark"],
+              ["sage", "Field notes", "Green"],
             ].map(([id, title, description]) => (
               <button
                 type="button"
@@ -608,9 +532,9 @@ function CreateLesson({ sources, defaultStyle, close, created }) {
               >
                 <div className="style-preview">
                   <span>
-                    A closer
+                    Lesson
                     <br />
-                    look.
+                    preview
                   </span>
                   <i />
                 </div>
@@ -625,11 +549,7 @@ function CreateLesson({ sources, defaultStyle, close, created }) {
         </div>
         <ErrorMessage message={error} />
         <div className="modal-footer">
-          <p>
-            A narrated lesson, transcript, and a place to ask questions.
-            <br />
-            Usually a few minutes to create.
-          </p>
+          <p>Generates a video, transcript, and captions.</p>
           <button className="primary" disabled={busy || chosen.length > 30}>
             {busy ? (
               <LoaderCircle className="spin" size={18} />
@@ -702,9 +622,7 @@ function LessonDetail({ id, onBack, onCreate }) {
         <ArrowLeft size={16} /> Back to library
       </button>
       <div className="lesson-title">
-        <div className="eyebrow">
-          {lesson.tags.join(" / ") || "YOUR NEXT LESSON"}
-        </div>
+        <div className="eyebrow">{lesson.tags.join(" / ")}</div>
         <h1>{lesson.title}</h1>
         <p>{lesson.summary}</p>
       </div>
@@ -732,14 +650,6 @@ function LessonDetail({ id, onBack, onCreate }) {
             </video>
           ) : (
             <div className={`generation-player ${lesson.style}`}>
-              <div className="generation-art">
-                <BookOpen size={42} />
-              </div>
-              <span className="eyebrow">
-                {lesson.status === "error"
-                  ? "LET’S GET THIS BACK ON TRACK"
-                  : "A LITTLE UNDERSTANDING IS ON ITS WAY"}
-              </span>
               <h2>{lesson.stage}</h2>
               {lesson.status === "error" ? (
                 <>
@@ -768,7 +678,7 @@ function LessonDetail({ id, onBack, onCreate }) {
           <div className="player-meta">
             <span>
               <Clock3 size={15} />
-              {lesson.duration ? time(lesson.duration) : "In the making"}
+              {lesson.duration ? time(lesson.duration) : "Generating"}
             </span>
             <span>
               <BookOpen size={15} />
@@ -838,7 +748,7 @@ function LessonDetail({ id, onBack, onCreate }) {
             </div>
           ) : tab === "notes" ? (
             <div className="lesson-notes">
-              <span className="eyebrow">WHAT YOU’LL TAKE AWAY</span>
+              <span className="eyebrow">Learning objective</span>
               <h3>
                 {lesson.learningObjective ||
                   "The lesson is still being planned."}
@@ -851,7 +761,7 @@ function LessonDetail({ id, onBack, onCreate }) {
               ))}
               {lesson.check && (
                 <div className="knowledge-check">
-                  <span className="eyebrow">TRY IT YOURSELF</span>
+                  <span className="eyebrow">Comprehension check</span>
                   <h3>{lesson.check.question}</h3>
                   <p>Think it through before revealing the explanation.</p>
                   <button
@@ -868,7 +778,7 @@ function LessonDetail({ id, onBack, onCreate }) {
             </div>
           ) : (
             <div className="lesson-notes">
-              <span className="eyebrow">THE CONTEXT BEHIND THIS LESSON</span>
+              <span className="eyebrow">Lesson context</span>
               <p>
                 This snapshot preserves what the tutor used when it created your
                 lesson.
@@ -980,23 +890,16 @@ function Chat({ id, seconds, ready, seek }) {
           <MessageCircle size={21} />
         </span>
         <div>
-          <h3>Talk it through</h3>
-          <p>Your questions belong here.</p>
+          <h3>Video Q&A</h3>
         </div>
       </div>
       <div className="chat-messages">
         {!messages.length && (
           <div className="chat-welcome">
-            <span className="eyebrow">THERE’S ALWAYS ANOTHER QUESTION</span>
-            <h3>Let’s make it click.</h3>
-            <p>
-              Ask about an idea, request a different example, or work through a
-              confusing moment.
-            </p>
             {[
-              "Explain this with a simpler example.",
-              "How can I use this in practice?",
-              "Test my understanding.",
+              "Explain with an example",
+              "Summarize this lesson",
+              "Test my understanding",
             ].map((q) => (
               <button key={q} disabled={!ready} onClick={() => setQuestion(q)}>
                 {q}
@@ -1008,7 +911,7 @@ function Chat({ id, seconds, ready, seek }) {
         {messages.map((m) => (
           <div key={m.id} className={`chat-message ${m.role}`}>
             <span className="message-label">
-              {m.role === "user" ? "YOU" : "YOUR TUTOR"}
+              {m.role === "user" ? "You" : "Assistant"}
               {m.role === "user" && m.seconds > 0 && ` · ${time(m.seconds)}`}
             </span>
             <AnswerText text={m.content} seek={seek} />
@@ -1016,8 +919,7 @@ function Chat({ id, seconds, ready, seek }) {
         ))}
         {busy && (
           <div className="thinking">
-            <LoaderCircle size={16} className="spin" /> Thinking through your
-            question…
+            <LoaderCircle size={16} className="spin" /> Answering…
           </div>
         )}
         <div ref={bottom} />
@@ -1028,7 +930,7 @@ function Chat({ id, seconds, ready, seek }) {
           aria-label="Question about this video"
           placeholder={
             ready
-              ? "What’s on your mind?"
+              ? "Ask about this video…"
               : "Available when your lesson is ready"
           }
           disabled={!ready || busy}
@@ -1047,7 +949,7 @@ function Chat({ id, seconds, ready, seek }) {
           <span>
             {ready
               ? `Watching at ${time(seconds)}`
-              : "Your tutor will be here shortly."}
+              : "Video is still generating"}
           </span>
           <IconButton
             label="Send question"
@@ -1058,9 +960,6 @@ function Chat({ id, seconds, ready, seek }) {
           </IconButton>
         </div>
       </form>
-      <p className="chat-footnote">
-        Grounded in this lesson and its source context.
-      </p>
     </aside>
   );
 }
@@ -1087,14 +986,8 @@ function Sources({ sources, reload, notify }) {
     <div className="page">
       <div className="page-heading">
         <div>
-          <div className="eyebrow">A LITTLE CONTEXT GOES A LONG WAY</div>
-          <h1>
-            Sources & notes<span className="heading-dot">.</span>
-          </h1>
-          <p>
-            Bring the things you’re learning from. Choose what goes into each
-            lesson.
-          </p>
+          <h1>Sources & notes</h1>
+          <p>Import notes and select which to include in each lesson.</p>
         </div>
         <button className="primary" onClick={() => setMode("text")}>
           <Plus size={18} /> Add a source
@@ -1104,7 +997,7 @@ function Sources({ sources, reload, notify }) {
       <div className="import-cards">
         <button onClick={() => setMode("folder")}>
           <FolderOpen size={26} />
-          <h3>Bring your Obsidian notes</h3>
+          <h3>Import Obsidian notes</h3>
           <p>Choose a folder, preview its notes, and select what to import.</p>
           <span>
             Browse notes <ArrowRight size={16} />
@@ -1112,7 +1005,7 @@ function Sources({ sources, reload, notify }) {
         </button>
         <button onClick={() => setMode("text")}>
           <MessageCircle size={26} />
-          <h3>Pick up a conversation</h3>
+          <h3>Import text or a conversation</h3>
           <p>
             Paste a learning brief, or import a text file or chat JSON export.
           </p>
@@ -1122,7 +1015,7 @@ function Sources({ sources, reload, notify }) {
         </button>
       </div>
       <div className="section-heading">
-        <h2>Your reference shelf</h2>
+        <h2>Imported sources</h2>
         <span>
           {sources.length} {sources.length === 1 ? "source" : "sources"}
         </span>
@@ -1130,10 +1023,7 @@ function Sources({ sources, reload, notify }) {
       {!sources.length ? (
         <div className="empty-shelf">
           <FileText size={28} />
-          <p>
-            Your notes will live here. Add only the context you want your tutor
-            to use.
-          </p>
+          <p>No sources imported.</p>
         </div>
       ) : (
         <div className="source-list">
@@ -1178,7 +1068,7 @@ function Sources({ sources, reload, notify }) {
             setMode(null);
             await reload();
             notify(
-              `${count} ${count === 1 ? "source added" : "sources added"} to your shelf`,
+              `${count} ${count === 1 ? "source added" : "sources added"}`,
             );
           }}
         />
@@ -1219,12 +1109,7 @@ function ImportModal({ mode, close, done }) {
   };
   return (
     <Modal
-      title={
-        mode === "folder"
-          ? "Bring your notes along."
-          : "Give your tutor some context."
-      }
-      eyebrow="YOUR REFERENCE SHELF"
+      title={mode === "folder" ? "Import notes folder" : "Add source"}
       close={close}
       wide
     >
@@ -1400,23 +1285,10 @@ function Profile({ notify }) {
     <div className="page narrow-page">
       <div className="page-heading">
         <div>
-          <div className="eyebrow">START FROM WHERE YOU ARE</div>
-          <h1>
-            Your learning profile<span className="heading-dot">.</span>
-          </h1>
+          <h1>Learning profile</h1>
           <p>
-            Help your tutor find the right starting point. You’re always the
-            editor.
-          </p>
-        </div>
-      </div>
-      <div className="profile-hint">
-        <UserRound size={25} />
-        <div>
-          <h3>A working picture, never a fixed label.</h3>
-          <p>
-            Share your goals, relevant background, and what still feels unclear.
-            You can paste a learning handoff from ChatGPT or Claude here.
+            Background, goals, and explanation preferences included in new
+            lessons.
           </p>
         </div>
       </div>
@@ -1481,11 +1353,7 @@ function Settings({ bootstrap, update, notify }) {
     <div className="page narrow-page">
       <div className="page-heading">
         <div>
-          <div className="eyebrow">MAKE YOURSELF AT HOME</div>
-          <h1>
-            Settings & connections<span className="heading-dot">.</span>
-          </h1>
-          <p>Your agent, your voice, your library.</p>
+          <h1>Settings & connections</h1>
         </div>
       </div>
       <form
@@ -1508,7 +1376,7 @@ function Settings({ bootstrap, update, notify }) {
           <div className="settings-section-title">
             <Terminal size={21} />
             <div>
-              <h2>Your teaching agent</h2>
+              <h2>Generation provider</h2>
               <p>
                 Use the coding agent already installed and signed in on this
                 computer.
@@ -1546,7 +1414,7 @@ function Settings({ bootstrap, update, notify }) {
           <div className="settings-section-title">
             <SlidersHorizontal size={21} />
             <div>
-              <h2>A voice for your lessons</h2>
+              <h2>Narration</h2>
               <p>
                 System speech is ready on macOS. Use Piper for another local
                 voice.
@@ -1652,7 +1520,7 @@ function Settings({ bootstrap, update, notify }) {
         <div className="settings-section-title">
           <FolderOpen size={21} />
           <div>
-            <h2>A home for everything</h2>
+            <h2>Library folder</h2>
             <p>
               Videos, transcripts, source snapshots, and discussions live here.
             </p>
@@ -1666,8 +1534,7 @@ function Settings({ bootstrap, update, notify }) {
       </section>
       <section className="terminal-example">
         <Terminal size={22} />
-        <h2>Start a lesson from your terminal.</h2>
-        <p>Same tutor. Same library. Another way in.</p>
+        <h2>Terminal commands</h2>
         <pre>
           learnvid create "How does attention work?"
           <br />

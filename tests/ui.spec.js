@@ -20,7 +20,7 @@ test("notes, learning profile, and provider settings persist through the real AP
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto(instance.url);
   await expect(
-    page.getByRole("heading", { name: /What would you like/ }),
+    page.getByRole("heading", { name: "No videos yet" }),
   ).toBeVisible();
   await page
     .getByRole("button", { name: "Sources & notes", exact: true })
@@ -60,9 +60,7 @@ test("notes, learning profile, and provider settings persist through the real AP
     .getByLabel("What would you like to understand?")
     .fill("How recursion returns");
   await page.getByLabel("My starting point", { exact: true }).check();
-  await page
-    .getByRole("button", { name: "Field notes Fresh & grounded" })
-    .click();
+  await page.getByRole("button", { name: "Field notes Green" }).click();
   // Observe the UI's create request without invoking an authenticated external agent in CI.
   let submitted;
   await page.route("**/api/lessons", async (route) => {

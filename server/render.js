@@ -99,7 +99,7 @@ export function sceneSvg(scene, index, total, style = "paper") {
 }
 export function thumbnailSvg(title, style = "paper") {
   const p = palettes[style] || palettes.paper;
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720"><rect width="1280" height="720" fill="${p.bg}"/><circle cx="1090" cy="260" r="205" fill="none" stroke="${p.accent}" stroke-width="2" opacity="0.4"/><circle cx="1060" cy="270" r="137" fill="none" stroke="${p.accent}" stroke-width="2" opacity="0.6"/><circle cx="1030" cy="280" r="70" fill="${p.accent}" opacity="0.18"/><path d="M875 550 L1140 85" stroke="${p.accent}" stroke-width="2"/><text x="76" y="92" fill="${p.accent}" font-family="sans-serif" font-size="18" letter-spacing="4">A LITTLE MORE UNDERSTANDING</text>${textLines(title, 76, 330, 62, p.fg, 27, 1.1, "serif")}<text x="76" y="653" fill="${p.muted}" font-family="sans-serif" font-size="20">LESSON LIBRARY</text></svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720"><rect width="1280" height="720" fill="${p.bg}"/><circle cx="1090" cy="260" r="205" fill="none" stroke="${p.accent}" stroke-width="2" opacity="0.4"/><circle cx="1060" cy="270" r="137" fill="none" stroke="${p.accent}" stroke-width="2" opacity="0.6"/><circle cx="1030" cy="280" r="70" fill="${p.accent}" opacity="0.18"/><path d="M875 550 L1140 85" stroke="${p.accent}" stroke-width="2"/>${textLines(title, 76, 330, 62, p.fg, 27, 1.1, "serif")}<text x="76" y="653" fill="${p.muted}" font-family="sans-serif" font-size="20">LESSON LIBRARY</text></svg>`;
 }
 export const clock = (seconds) =>
   `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, "0")}`;
