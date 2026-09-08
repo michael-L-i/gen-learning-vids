@@ -44,7 +44,7 @@ The desktop window and terminal use the same library. Keep the checkout in place
 ## Make your first lesson
 
 1. In **Learning profile**, describe your background, goals, uncertainties, and useful explanation preferences.
-2. In **Sources & notes**, paste a discussion, import a text/JSON file, or preview an Obsidian folder and select notes.
+2. In **Sources & notes → Add a source**, choose a file, folder, Obsidian vault, pasted text, ChatGPT memory, or chat export. File and Folder open upload pickers and import immediately using the selected name as the title. Folder uploads combine supported Markdown, text, and JSON files into one source (up to 100 files / 3 MB, subject to the 150,000-character source limit). Obsidian currently previews local notes; an MCP connection is still under consideration. Memory is pasted manually, not synced from your account.
 3. Select **Create a lesson**, give it a question, describe where you are stuck, and select relevant sources. Leave Presentation on Auto or choose an approach and add visual directions.
 4. Open the finished video to watch, jump through its transcript, reveal the comprehension check, or ask questions.
 

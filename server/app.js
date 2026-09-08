@@ -9,7 +9,12 @@ import { speak } from "./speech.js";
 import { settingsSchema } from "./schema.js";
 import { speechPreviewText } from "./speech-options.js";
 import { createLesson, startWorker, retryLesson, askLesson } from "./engine.js";
-import { scanNotes, importNotes, textFromExport } from "./imports.js";
+import {
+  scanNotes,
+  importNotes,
+  textFromExport,
+  importUpload,
+} from "./imports.js";
 
 export async function createApp(
   library,
@@ -214,18 +219,31 @@ export async function createApp(
   app.post(
     "/api/sources",
     wrap(async (req, res) => {
-      const { title, content, filename = "" } = req.body;
+      const { title, content, filename = "", kind } = req.body;
       if (typeof content !== "string" || typeof filename !== "string")
         throw new Error("Provide text or a supported export.");
+      if (
+        kind !== undefined &&
+        !["note", "file", "memory", "conversation"].includes(kind)
+      )
+        throw new Error("Choose a supported source type.");
       res.status(201).json(
         await library.addSource({
           title,
           content: textFromExport(content, filename),
-          origin: filename || "Pasted text",
-          kind: filename.endsWith(".json") ? "conversation" : "note",
+          origin:
+            filename ||
+            (kind === "memory" ? "Pasted ChatGPT memory" : "Pasted text"),
+          kind: kind || (/\.json$/i.test(filename) ? "conversation" : "note"),
         }),
       );
     }),
+  );
+  app.post(
+    "/api/sources/upload",
+    wrap(async (req, res) =>
+      res.status(201).json(await importUpload(library, req.body)),
+    ),
   );
   app.delete(
     "/api/sources/:id",
@@ -247,7 +265,14 @@ export async function createApp(
     wrap(async (req, res) =>
       res
         .status(201)
-        .json(await importNotes(library, req.body.root, req.body.paths)),
+        .json(
+          await importNotes(
+            library,
+            req.body.root,
+            req.body.paths,
+            req.body.kind,
+          ),
+        ),
     ),
   );
   app.get(

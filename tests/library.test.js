@@ -4,7 +4,12 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { Library, readJson } from "../server/store.js";
-import { scanNotes, importNotes, textFromExport } from "../server/imports.js";
+import {
+  scanNotes,
+  importNotes,
+  textFromExport,
+  importUpload,
+} from "../server/imports.js";
 import { createLesson, runJob, retryLesson } from "../server/engine.js";
 import { captions, wrap, sceneSvg } from "../server/render.js";
 import { startServer } from "../server/app.js";
@@ -284,4 +289,26 @@ test("local API rejects cross-origin writes, enforces input validation, and serv
     ).status,
     404,
   );
+});
+
+test("folder uploads validate the whole selection before creating a named source", async (t) => {
+  const lib = await new Library(await temporary(t)).init();
+  const files = [
+    { path: "Notes/First.md", content: "first" },
+    { path: "Notes/Nested/Second.txt", content: "second" },
+  ];
+  for (const extra of [
+    { path: "Other/Third.md", content: "third" },
+    { path: "Notes/../Third.md", content: "third" },
+    { path: "Notes/Third.json", content: "not JSON" },
+    { path: "Notes/Third.md", content: "x".repeat(150000) },
+  ]) {
+    await assert.rejects(() =>
+      importUpload(lib, { kind: "folder", files: [...files, extra] }),
+    );
+    assert.equal((await lib.sources()).length, 0);
+  }
+  const source = await importUpload(lib, { kind: "folder", files });
+  assert.equal(source.title, "Notes");
+  assert.match(source.content, /# Nested\/Second.txt\n\nsecond/);
 });
