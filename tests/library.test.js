@@ -187,6 +187,26 @@ test("parallel processing of one lesson cannot acquire two writers", async (t) =
   release();
   await first;
 });
+test("interrupted jobs become retryable while live workers remain active", async (t) => {
+  const lib = await new Library(await temporary(t)).init();
+  const lesson = await createLesson(lib, { topic: "Recursion" }, plan);
+  await lib.saveLesson({
+    ...lesson,
+    status: "rendering",
+    workerPid: process.pid,
+  });
+  assert.equal((await lib.lesson(lesson.id)).status, "rendering");
+  await lib.saveLesson({
+    ...lesson,
+    status: "rendering",
+    workerPid: 2147483647,
+  });
+  assert.equal((await lib.lesson(lesson.id)).status, "error");
+  await retryLesson(lib, lesson.id);
+  assert.equal((await lib.lesson(lesson.id)).status, "queued");
+  await lib.saveLesson({ ...lesson, updatedAt: "2000-01-01T00:00:00.000Z" });
+  assert.equal((await lib.lesson(lesson.id)).status, "error");
+});
 test("captions span narration timing and rendered text is escaped", () => {
   const vtt = captions([
     { narration: "First sentence for the learner.", start: 0, duration: 4 },
@@ -200,7 +220,10 @@ test("captions span narration timing and rendered text is escaped", () => {
   assert.deepEqual(parseAgentJson('```json\n{"ok":true}\n```'), { ok: true });
 });
 test("local API rejects cross-origin writes, enforces input validation, and serves shared files", async (t) => {
-  const instance = await startServer({ root: await temporary(t), port: 0 });
+  const instance = await startServer({
+    root: path.join(await temporary(t), ".hidden-library"),
+    port: 0,
+  });
   t.after(() => instance.close());
   const { token } = await (await fetch(instance.url + "/api/bootstrap")).json();
   const headers = {

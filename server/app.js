@@ -123,10 +123,11 @@ export async function createApp(library, { dev = false } = {}) {
       if (req.params.name === "video.mp4")
         return res.sendFile(
           path.join(library.root, "videos", `${req.params.id}.mp4`),
+          { dotfiles: "allow" },
         );
       if (!names.includes(req.params.name))
         return res.status(404).json({ error: "File not found." });
-      res.sendFile(path.join(dir, req.params.name));
+      res.sendFile(path.join(dir, req.params.name), { dotfiles: "allow" });
     }),
   );
   app.get(
@@ -150,16 +151,14 @@ export async function createApp(library, { dev = false } = {}) {
       const { title, content, filename = "" } = req.body;
       if (typeof content !== "string" || typeof filename !== "string")
         throw new Error("Provide text or a supported export.");
-      res
-        .status(201)
-        .json(
-          await library.addSource({
-            title,
-            content: textFromExport(content, filename),
-            origin: filename || "Pasted text",
-            kind: filename.endsWith(".json") ? "conversation" : "note",
-          }),
-        );
+      res.status(201).json(
+        await library.addSource({
+          title,
+          content: textFromExport(content, filename),
+          origin: filename || "Pasted text",
+          kind: filename.endsWith(".json") ? "conversation" : "note",
+        }),
+      );
     }),
   );
   app.delete(
@@ -224,18 +223,16 @@ export async function createApp(library, { dev = false } = {}) {
     if (res.headersSent) return next(err);
     const status =
       err.code === "ENOENT" ? 404 : err.code === "ELOCKED" ? 409 : 400;
-    res
-      .status(status)
-      .json({
-        error:
-          err.code === "ELOCKED"
-            ? "This lesson is busy. Wait a moment and try again."
-            : err.name === "ZodError"
-              ? err.issues
-                  .map((i) => `${i.path.join(".")}: ${i.message}`)
-                  .join("; ")
-              : err.message,
-      });
+    res.status(status).json({
+      error:
+        err.code === "ELOCKED"
+          ? "This lesson is busy. Wait a moment and try again."
+          : err.name === "ZodError"
+            ? err.issues
+                .map((i) => `${i.path.join(".")}: ${i.message}`)
+                .join("; ")
+            : err.message,
+    });
   });
   return app;
 }

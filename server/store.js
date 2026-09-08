@@ -85,7 +85,29 @@ export class Library {
     await atomicWrite(path.join(this.root, "profile", "learner.md"), content);
   }
   async lesson(id) {
-    return readJson(path.join(this.lessonDir(id), "lesson.json"));
+    const lesson = await readJson(path.join(this.lessonDir(id), "lesson.json"));
+    if (["queued", "generating", "rendering"].includes(lesson.status)) {
+      let interrupted = false;
+      if (lesson.workerPid) {
+        try {
+          process.kill(lesson.workerPid, 0);
+        } catch (error) {
+          interrupted = error.code === "ESRCH";
+        }
+      } else {
+        interrupted = Date.now() - Date.parse(lesson.updatedAt) > 60000;
+      }
+      // Report a stopped worker without letting a read overwrite a concurrent update.
+      if (interrupted)
+        return {
+          ...lesson,
+          status: "error",
+          stage: "Generation was interrupted",
+          error:
+            "The generation process stopped. Retry to continue from the saved lesson plan. A recently stopped process may take 30 seconds to release its lock.",
+        };
+    }
+    return lesson;
   }
   async saveLesson(lesson) {
     await writeJson(
@@ -143,7 +165,7 @@ export class Library {
   }
   async withLessonLock(id, fn) {
     const release = await lockfile.lock(this.lessonDir(id), {
-      stale: 30 * 60 * 1000,
+      stale: 30000,
       update: 10000,
       retries: 0,
     });

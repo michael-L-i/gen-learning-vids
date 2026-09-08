@@ -84,7 +84,7 @@ export function sceneSvg(scene, index, total, style = "paper") {
     cards = points
       .map(
         (point, i) =>
-          `<rect x="${76 + i * 578}" y="290" width="550" height="238" rx="8" fill="${p.card}"/><text x="${104 + i * 578}" y="336" fill="${p.accent}" font-size="19" font-family="sans-serif">${i ? "02" : "01"}</text>${textLines(point, 104 + i * 578, 387, 28, p.fg, 30)}`,
+          `<rect x="${76 + i * 578}" y="290" width="550" height="238" rx="8" fill="${p.card}"/><text x="${104 + i * 578}" y="336" fill="${p.accent}" font-size="19" font-family="sans-serif">${i ? "02" : "01"}</text>${textLines(point, 104 + i * 578, 380, 26, p.fg, 34)}`,
       )
       .join("");
   } else {

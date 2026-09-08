@@ -197,6 +197,7 @@ export async function retryLesson(library, id) {
       progress: 0,
       error: null,
       workerPid: null,
+      updatedAt: new Date().toISOString(),
     });
     return id;
   });

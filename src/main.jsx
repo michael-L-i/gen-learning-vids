@@ -919,22 +919,28 @@ function LessonDetail({ id, onBack, onCreate }) {
 function AnswerText({ text, seek }) {
   return (
     <div className="answer-text">
-      {text.split(/(\[\d{1,3}:\d{2}\])/g).map((part, i) =>
-        /^\[\d+:\d{2}\]$/.test(part) ? (
-          <button
-            key={i}
-            className="timestamp-link"
-            onClick={() => {
-              const [m, s] = part.slice(1, -1).split(":").map(Number);
-              seek(m * 60 + s);
-            }}
-          >
-            {part}
-          </button>
-        ) : (
-          <span key={i}>{part}</span>
-        ),
-      )}
+      {text
+        .split(/(\[\d{1,3}:\d{2}\]|`[^`\n]+`|\*\*[^*\n]+\*\*)/g)
+        .map((part, i) =>
+          /^\[\d+:\d{2}\]$/.test(part) ? (
+            <button
+              key={i}
+              className="timestamp-link"
+              onClick={() => {
+                const [m, s] = part.slice(1, -1).split(":").map(Number);
+                seek(m * 60 + s);
+              }}
+            >
+              {part}
+            </button>
+          ) : part.startsWith("`") && part.endsWith("`") ? (
+            <code key={i}>{part.slice(1, -1)}</code>
+          ) : part.startsWith("**") && part.endsWith("**") ? (
+            <strong key={i}>{part.slice(2, -2)}</strong>
+          ) : (
+            <span key={i}>{part}</span>
+          ),
+        )}
     </div>
   );
 }
@@ -1513,6 +1519,7 @@ function Settings({ bootstrap, update, notify }) {
             <label className="field">
               Agent
               <select
+                aria-label="Agent"
                 value={settings.provider}
                 onChange={(e) => change("provider", e.target.value)}
               >
@@ -1550,6 +1557,7 @@ function Settings({ bootstrap, update, notify }) {
             <label className="field">
               Speech engine
               <select
+                aria-label="Speech engine"
                 value={settings.tts}
                 onChange={(e) => change("tts", e.target.value)}
               >
@@ -1598,6 +1606,7 @@ function Settings({ bootstrap, update, notify }) {
           <label className="field">
             Default visual style
             <select
+              aria-label="Default visual style"
               value={settings.style}
               onChange={(e) => change("style", e.target.value)}
             >
