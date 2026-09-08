@@ -1,0 +1,41 @@
+---
+name: lesson-library
+description: Create personalized narrated video lessons in the local Lesson Library app, browse its catalog, import selected learning notes, or ask questions about a saved lesson. Use when the user wants a lesson added to their video library from this conversation.
+---
+
+# Lesson Library
+
+Use the installed `learnvid` CLI. The desktop/browser app and CLI share `~/Lesson Library`, or the user's `LEARNVID_HOME` / `--library` location. Do not save learner data in the public app repository.
+
+Run `learnvid doctor` to check the library and rendering tools when setup is unknown. If the command is missing, use `node /path/to/gen-learning-vids/bin/learnvid.js` when the repository location is known, or tell the user to run `npm link` in their checkout. Do not invent a repository path.
+
+## Create from this conversation
+
+Read `learnvid profile` and use the current discussion to identify the learner's goal, demonstrated understanding, specific uncertainty, and useful examples. Distinguish evidence from assumptions; a saved note or watched video does not establish mastery. Ask a short prerequisite question only when its answer would materially change the lesson.
+
+Prefer writing the lesson plan directly, using [the lesson format](references/lesson-format.md), so the current assistant can teach from the context it already has. Save the plan and a concise context brief in a temporary private directory, then run:
+
+```sh
+learnvid create "Lesson topic" --plan /absolute/path/lesson.json --brief /absolute/path/brief.md
+```
+
+The brief should preserve the learning objective, relevant learner evidence, explicit preferences, and unresolved assumptions. Include only context relevant to this lesson. Do not claim to access chat history or memory that is unavailable in this session.
+
+Alternatively, delegate planning to the app's configured Codex or Claude provider:
+
+```sh
+learnvid create "Lesson topic" --brief /absolute/path/brief.md --source /absolute/path/selected-note.md
+```
+
+`--source` is repeatable; `--style` accepts `paper`, `midnight`, or `sage`. Creation is asynchronous by default. Report the returned lesson ID and use `learnvid show ID` to check status. Use `--wait` when the user wants to wait for the finished video. Never report a queued or failed lesson as ready. `learnvid open` opens the running app's UI; start `learnvid serve --open` if needed.
+
+## Existing lessons and notes
+
+- `learnvid list`: list titles, IDs, and generation status.
+- `learnvid show ID`: read the lesson and transcript chapters with timestamps.
+- Answer directly from the saved lesson when appropriate, or use `learnvid ask ID "Question"` to save a discussion using the app's configured tutor.
+- `learnvid scan /path/to/vault`: preview Markdown/text notes. Import only user-selected scope with `learnvid import-notes /path/to/vault relative-note.md`.
+- `learnvid import /path/to/file`: import text, Markdown, or ChatGPT/Claude JSON exports as reference context. This is a snapshot, not account synchronization.
+- `learnvid retry ID`: retry a failed lesson using current settings and any saved plan.
+
+The app orchestrates locally but Codex/Claude inference uses their configured providers. Local system speech is the default. Do not modify provider login, speech settings, or the learner profile merely to make a lesson succeed; surface the actionable error or use the user's stated preferences.

@@ -15,7 +15,12 @@
     "check": "npm test && npm run build",
     "desktop": "electron desktop/main.cjs",
     "desktop:package": "npm run build && electron-builder --dir",
-    "dist:mac": "npm run build && electron-builder --mac dmg"
+    "dist:mac": "npm run build && electron-builder --mac dmg",
+    "skill:codex": "node scripts/install-skill.js codex",
+    "skill:claude": "node scripts/install-skill.js claude",
+    "format": "prettier --write src server bin desktop tests scripts",
+    "test:ui": "playwright test tests/ui.spec.js --workers=1",
+    "build:icon": "node scripts/build-icon.js"
   },
   "dependencies": {
     "express": "^5.1.0",
@@ -35,7 +40,7 @@
     "vite": "^6.4.3"
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=22.16.0"
   },
   "build": {
     "appId": "dev.lessonlibrary.app",
@@ -53,10 +58,17 @@
     },
     "mac": {
       "category": "public.app-category.education",
-      "target": "dmg"
+      "target": "dmg",
+      "icon": "build/icon.icns"
     },
     "directories": {
       "output": "release"
     }
+  },
+  "author": "Lesson Library contributors",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/michael-L-i/gen-learning-vids.git"
   }
 }

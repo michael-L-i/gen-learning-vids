@@ -1,16 +1,16 @@
 {
   "name": "lesson-library",
   "version": "0.1.0",
-  "description": "Lesson Library plugin",
+  "description": "Create and explore personalized video lessons in your local Lesson Library.",
   "author": {
-    "name": "Local developer"
+    "name": "Lesson Library contributors"
   },
   "skills": "./skills/",
   "interface": {
     "displayName": "Lesson Library",
-    "shortDescription": "Use Lesson Library in Codex.",
-    "longDescription": "Lesson Library adds a local Codex plugin scaffold.",
-    "developerName": "Local developer",
+    "shortDescription": "Make video lessons from your learning context.",
+    "longDescription": "Create narrated lessons, browse the shared local library, and ask questions using the learnvid CLI.",
+    "developerName": "Lesson Library contributors",
     "category": "Productivity",
     "capabilities": [],
     "defaultPrompt": "Help me use Lesson Library."
