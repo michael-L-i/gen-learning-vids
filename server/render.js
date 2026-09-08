@@ -4,79 +4,14 @@ import sharp from "sharp";
 import { run } from "./process.js";
 import { atomicWrite } from "./store.js";
 
-export const palettes = {
-  paper: {
-    bg: "#eee8dc",
-    fg: "#272b29",
-    accent: "#b15335",
-    card: "#fbf8f0",
-    muted: "#77756a",
-  },
-  midnight: {
-    bg: "#17242a",
-    fg: "#f4f1e8",
-    accent: "#e5b86d",
-    card: "#24363d",
-    muted: "#adc0c3",
-  },
-  sage: {
-    bg: "#dfe8de",
-    fg: "#244c40",
-    accent: "#32705a",
-    card: "#f0f5eb",
-    muted: "#638071",
-  },
-};
-export const escapeXml = (s) =>
-  String(s).replace(
-    /[<>&"']/g,
-    (c) =>
-      ({
-        "<": "&lt;",
-        ">": "&gt;",
-        "&": "&amp;",
-        '"': "&quot;",
-        "'": "&apos;",
-      })[c],
-  );
-export function wrap(text, max) {
-  const words = String(text)
-    .split(/\s+/)
-    .flatMap((w) =>
-      w.length > max ? w.match(new RegExp(`.{1,${max}}`, "g")) : [w],
-    );
-  const lines = [];
-  let line = "";
-  for (const word of words) {
-    if ((line + " " + word).trim().length > max && line) {
-      lines.push(line);
-      line = word;
-    } else line = (line + " " + word).trim();
-  }
-  if (line) lines.push(line);
-  return lines;
-}
-const textLines = (
-  text,
-  x,
-  y,
-  size,
-  color,
-  max,
-  lineHeight = 1.3,
-  family = "sans-serif",
-) =>
-  `<text x="${x}" y="${y}" fill="${color}" font-family="${family}" font-size="${size}">${wrap(
-    text,
-    max,
-  )
-    .map(
-      (line, i) =>
-        `<tspan x="${x}" dy="${i ? size * lineHeight : 0}">${escapeXml(line)}</tspan>`,
-    )
-    .join("")}</text>`;
-export function sceneSvg(scene, index, total, style = "paper") {
-  const p = palettes[style] || palettes.paper;
+import { palettes, escapeXml, wrap, textLines } from "./visual-utils.js";
+import { contentSvg, frameCount, resolvePalette } from "./visuals.js";
+export { escapeXml, wrap } from "./visual-utils.js";
+
+export function sceneSvg(scene, index, total, style = "auto", step = Infinity) {
+  const p = resolvePalette(style, scene);
+  if (scene.content || scene.visual === "steps")
+    return contentSvg(scene, index, total, p, step);
   const points = scene.points || [];
   const two = scene.visual === "comparison" && points.length <= 2;
   let cards = "";
@@ -165,11 +100,16 @@ export async function renderLesson(
   lesson,
   settings,
   progress = async () => {},
+  { synthesize = speak } = {},
 ) {
   const dir = library.lessonDir(lesson.id);
   const render = path.join(dir, "render");
   await fs.mkdir(render, { recursive: true });
-  await sharp(Buffer.from(thumbnailSvg(lesson.title, lesson.style)))
+  await sharp(
+    Buffer.from(
+      sceneSvg(lesson.scenes[0], 0, lesson.scenes.length, lesson.style),
+    ),
+  )
     .png()
     .toFile(path.join(dir, "thumbnail.png"));
   let start = 0;
@@ -181,9 +121,8 @@ export async function renderLesson(
       15 + (70 * i) / lesson.scenes.length,
     );
     const audio = path.join(render, `scene-${i}.wav`);
-    const frame = path.join(render, `scene-${i}.png`);
     const clip = path.join(render, `scene-${i}.mp4`);
-    await speak(scene.narration, audio, settings);
+    await synthesize(scene.narration, audio, settings);
     const { stdout } = await run("ffprobe", [
       "-v",
       "error",
@@ -196,11 +135,22 @@ export async function renderLesson(
     const duration = Number(stdout.trim());
     if (!Number.isFinite(duration) || duration <= 0)
       throw new Error("The speech engine produced empty audio.");
-    await sharp(
-      Buffer.from(sceneSvg(scene, i, lesson.scenes.length, lesson.style)),
-    )
-      .png()
-      .toFile(frame);
+    const count = frameCount(scene);
+    const frames = [];
+    for (let step = 0; step < count; step++) {
+      const name = `scene-${i}-${step}.png`;
+      await sharp(
+        Buffer.from(
+          sceneSvg(scene, i, lesson.scenes.length, lesson.style, step),
+        ),
+      )
+        .png()
+        .toFile(path.join(render, name));
+      frames.push(`file '${name}'\nduration ${duration / count}`);
+    }
+    frames.push(`file 'scene-${i}-${count - 1}.png'`);
+    const frameList = path.join(render, `frames-${i}.txt`);
+    await atomicWrite(frameList, frames.join("\n"));
     await progress(
       `Rendering chapter ${i + 1} of ${lesson.scenes.length}`,
       20 + (70 * i) / lesson.scenes.length,
@@ -210,14 +160,16 @@ export async function renderLesson(
       "-hide_banner",
       "-loglevel",
       "error",
-      "-loop",
+      "-f",
+      "concat",
+      "-safe",
       "1",
-      "-framerate",
-      "24",
       "-i",
-      frame,
+      frameList,
       "-i",
       audio,
+      "-r",
+      "24",
       "-c:v",
       "libx264",
       "-preset",
@@ -227,7 +179,7 @@ export async function renderLesson(
       "-crf",
       "23",
       "-vf",
-      "fade=t=in:st=0:d=0.3,format=yuv420p",
+      "fps=24,fade=t=in:st=0:d=0.3,format=yuv420p",
       "-c:a",
       "aac",
       "-b:a",
@@ -236,7 +188,6 @@ export async function renderLesson(
       "44100",
       "-t",
       String(duration),
-      "-shortest",
       clip,
     ]);
     scenes.push({ ...scene, start, duration });

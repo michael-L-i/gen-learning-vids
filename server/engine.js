@@ -12,6 +12,8 @@ import { writeJson } from "./store.js";
 export async function createLesson(library, input, plan) {
   const request = createSchema.parse(input);
   const settings = await library.settings();
+  request.presentation ||= settings.presentation;
+  request.style ||= settings.style;
   const sources = await Promise.all(
     request.sourceIds.map((id) => library.source(id)),
   );
@@ -39,6 +41,7 @@ export async function createLesson(library, input, plan) {
     context,
     settings,
     style: request.style || settings.style,
+    presentation: request.presentation,
     status: "queued",
     stage: "Waiting to begin",
     progress: 0,

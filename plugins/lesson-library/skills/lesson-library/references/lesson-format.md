@@ -27,11 +27,11 @@ Write a JSON object with these fields. All fields are required. The CLI validate
 
 Include **2–8 scenes** (the shape example above shows one to avoid repetition). Usually use 4–6 scenes and 350–600 spoken words total. Honor the user's requested scope rather than padding a simple explanation.
 
-Supported visuals:
+Basic visuals:
 - `concept`: key ideas on separate panels.
 - `steps`: numbered steps in a sequence.
 - `comparison`: two panels when there are two points; more points use stacked panels.
 
-This renderer produces narrated designed slides with chapter transitions, not arbitrary animations. Do not describe movement, code execution, or diagrams that the renderer cannot display. On-screen points should be concise; put the richer explanation in narration. Narration becomes both the audio and transcript. Captions use approximate timing from speech length.
+For equations, code, diagrams, and plots, use the structured content formats in [subject-specific visuals](visuals.md). Choose representations scene by scene rather than repeating a single template. The renderer supports progressive reveals, not arbitrary animations. Do not describe movement, code execution, or diagrams that the renderer cannot display. On-screen points should be concise; put the richer explanation in narration. Narration becomes both the audio and transcript. Captions use approximate timing from speech length.
 
 Use concrete examples and resolve the learner's actual confusion. Avoid placing large equations, Markdown, tables, or code blocks in on-screen strings. Don't use unsupported source citations; name sources in the context brief when supplied.

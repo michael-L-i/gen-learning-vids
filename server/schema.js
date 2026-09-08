@@ -1,4 +1,9 @@
 import { z } from "zod";
+import { zodToJsonSchema } from "zod-to-json-schema";
+
+export const presentations = ["auto", "worked", "diagram", "code", "slides"];
+const presentation = z.enum(presentations);
+const palette = z.enum(["auto", "paper", "midnight", "sage"]);
 
 export const settingsSchema = z.object({
   provider: z.enum(["codex", "claude"]).default("codex"),
@@ -7,22 +12,151 @@ export const settingsSchema = z.object({
   voice: z.string().max(120).default(""),
   speechRate: z.number().int().min(100).max(260).default(175),
   piperModel: z.string().max(1000).default(""),
-  style: z.enum(["paper", "midnight", "sage"]).default("paper"),
+  style: palette.default("auto"),
+  presentation: presentation.default("auto"),
 });
 export const createSchema = z.object({
   topic: z.string().trim().min(3).max(500),
   goal: z.string().trim().max(3000).default(""),
   sourceIds: z.array(z.string().uuid()).max(30).default([]),
   brief: z.string().max(20000).default(""),
-  style: z.enum(["paper", "midnight", "sage"]).optional(),
+  style: palette.optional(),
+  presentation: presentation.optional(),
+  visualBrief: z.string().trim().max(2000).default(""),
 });
-export const sceneSchema = z.object({
-  title: z.string().min(1).max(75),
-  narration: z.string().min(10).max(1600),
-  visual: z.enum(["concept", "steps", "comparison"]),
-  points: z.array(z.string().min(1).max(140)).min(1).max(4),
-  takeaway: z.string().min(1).max(180),
-});
+const coordinate = z.number().finite().min(-1e9).max(1e9);
+export const visualContentSchema = z.discriminatedUnion("kind", [
+  z.object({
+    kind: z.literal("equation"),
+    steps: z
+      .array(
+        z.object({
+          tex: z.string().min(1).max(180),
+          explanation: z.string().max(100),
+        }),
+      )
+      .min(1)
+      .max(4),
+  }),
+  z.object({
+    kind: z.literal("code"),
+    language: z.string().max(30),
+    code: z
+      .string()
+      .min(1)
+      .max(1400)
+      .refine(
+        (s) =>
+          s.split("\n").length <= 14 &&
+          s.split("\n").every((l) => l.length <= 76),
+        "Code must fit 14 lines of 76 characters.",
+      ),
+    highlightLines: z.array(z.number().int().min(1).max(14)).max(8),
+    output: z.string().max(180),
+  }),
+  z.object({
+    kind: z.literal("diagram"),
+    nodes: z
+      .array(
+        z.object({
+          id: z.string().regex(/^[a-zA-Z0-9_-]{1,30}$/),
+          label: z.string().min(1).max(60),
+          x: z.number().min(0).max(100),
+          y: z.number().min(0).max(100),
+          shape: z.enum(["box", "ellipse"]),
+        }),
+      )
+      .min(1)
+      .max(8),
+    edges: z
+      .array(
+        z.object({
+          from: z.string().max(30),
+          to: z.string().max(30),
+          label: z.string().max(40),
+        }),
+      )
+      .max(12),
+  }),
+  z.object({
+    kind: z.literal("plot"),
+    xLabel: z.string().max(50),
+    yLabel: z.string().max(50),
+    series: z
+      .array(
+        z.object({
+          name: z.string().min(1).max(30),
+          points: z
+            .array(z.object({ x: coordinate, y: coordinate }))
+            .min(2)
+            .max(100),
+        }),
+      )
+      .min(1)
+      .max(3),
+  }),
+]);
+export const sceneSchema = z
+  .object({
+    title: z.string().min(1).max(75),
+    narration: z.string().min(10).max(1600),
+    visual: z.enum([
+      "concept",
+      "steps",
+      "comparison",
+      "equation",
+      "code",
+      "diagram",
+      "plot",
+    ]),
+    points: z.array(z.string().min(1).max(140)).min(1).max(4),
+    takeaway: z.string().min(1).max(180),
+    visualReason: z.string().max(250).default(""),
+    content: visualContentSchema.nullable().default(null),
+  })
+  .superRefine((scene, ctx) => {
+    if (
+      ["equation", "code", "diagram", "plot"].includes(scene.visual) &&
+      scene.content?.kind !== scene.visual
+    )
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["content"],
+        message: `A ${scene.visual} scene requires matching content.`,
+      });
+    if (scene.content && scene.content.kind !== scene.visual)
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["visual"],
+        message: "Visual must match content.kind.",
+      });
+    if (scene.content?.kind === "diagram") {
+      const ids = scene.content.nodes.map((n) => n.id);
+      if (
+        new Set(ids).size !== ids.length ||
+        scene.content.edges.some(
+          (e) => !ids.includes(e.from) || !ids.includes(e.to),
+        )
+      )
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["content"],
+          message:
+            "Diagram node IDs must be unique and every edge must reference existing nodes.",
+        });
+    }
+    if (
+      scene.content?.kind === "code" &&
+      scene.content.highlightLines.some(
+        (n) => n > scene.content.code.split("\n").length,
+      )
+    )
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["content"],
+        message: "Highlighted line does not exist.",
+      });
+  });
 export const lessonPlanSchema = z.object({
   title: z.string().min(1).max(100),
   summary: z.string().min(1).max(400),
@@ -36,45 +170,22 @@ export const lessonPlanSchema = z.object({
   }),
 });
 
-// Strict JSON Schema for Codex's structured-output mode (all properties required).
-export const planJsonSchema = {
-  type: "object",
-  additionalProperties: false,
-  properties: {
-    title: { type: "string" },
-    summary: { type: "string" },
-    learningObjective: { type: "string" },
-    assumedKnowledge: { type: "array", items: { type: "string" } },
-    tags: { type: "array", items: { type: "string" } },
-    scenes: {
-      type: "array",
-      items: {
-        type: "object",
-        additionalProperties: false,
-        properties: {
-          title: { type: "string" },
-          narration: { type: "string" },
-          visual: { type: "string", enum: ["concept", "steps", "comparison"] },
-          points: { type: "array", items: { type: "string" } },
-          takeaway: { type: "string" },
-        },
-        required: ["title", "narration", "visual", "points", "takeaway"],
-      },
-    },
-    check: {
-      type: "object",
-      additionalProperties: false,
-      properties: { question: { type: "string" }, answer: { type: "string" } },
-      required: ["question", "answer"],
-    },
-  },
-  required: [
-    "title",
-    "summary",
-    "learningObjective",
-    "assumedKnowledge",
-    "tags",
-    "scenes",
-    "check",
-  ],
-};
+// Derive the provider contract from the same schema used to validate imported plans.
+export const planJsonSchema = zodToJsonSchema(lessonPlanSchema, {
+  $refStrategy: "none",
+});
+delete planJsonSchema.$schema;
+function strictObjects(node) {
+  if (!node || typeof node !== "object") return;
+  if (node.type === "object") {
+    node.additionalProperties = false;
+    node.required = Object.keys(node.properties || {});
+  }
+  delete node.default;
+  for (const value of Object.values(node))
+    if (typeof value === "object") {
+      if (Array.isArray(value)) value.forEach(strictObjects);
+      else strictObjects(value);
+    }
+}
+strictObjects(planJsonSchema);

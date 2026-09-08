@@ -25,11 +25,13 @@
   "dependencies": {
     "express": "^5.1.0",
     "lucide-react": "^0.468.0",
+    "mathjax-full": "^3.2.2",
     "proper-lockfile": "^4.1.2",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "sharp": "^0.34.5",
-    "zod": "^3.25.76"
+    "zod": "^3.25.76",
+    "zod-to-json-schema": "^3.25.1"
   },
   "devDependencies": {
     "@playwright/test": "^1.55.0",

@@ -6,7 +6,7 @@ A personal video learning app, shaped around what you know and where you get stu
 
 ## What works
 
-- A desktop or browser app with a searchable video catalog, thumbnails, progress, and three visual styles.
+- A desktop or browser app with a searchable video catalog, thumbnails, progress, and lesson-specific visuals.
 - Narrated MP4 lessons, timestamped transcripts, captions, chapter navigation, and a comprehension question.
 - A tutor beside each video, with saved conversations and clickable timestamp references.
 - A Markdown learner profile, selected Obsidian notes, pasted discussions, and ChatGPT / Claude JSON export imports.
@@ -14,7 +14,7 @@ A personal video learning app, shaped around what you know and where you get stu
 - Configurable system speech (default) or Piper. Rendering and speech run locally.
 - A shared CLI and companion skills so an agent can add lessons using the context of your current conversation.
 
-This first version makes short narrated slide videos with concept, sequence, and comparison layouts. It does not generate cinematic footage, upload to YouTube, or silently synchronize account memory.
+Lessons can combine diagrams, typeset equations, plots, code walkthroughs, processes, concepts, and comparisons. Auto chooses representations scene by scene; optional presentation preferences and visual directions guide the result. Colors are configured separately. It does not generate cinematic footage, upload to YouTube, or silently synchronize account memory.
 
 ## Run from GitHub
 
@@ -45,7 +45,7 @@ The desktop window and terminal use the same library. Keep the checkout in place
 
 1. In **Learning profile**, describe your background, goals, uncertainties, and useful explanation preferences.
 2. In **Sources & notes**, paste a discussion, import a text/JSON file, or preview an Obsidian folder and select notes.
-3. Select **Create a lesson**, give it a question, describe where you are stuck, and select relevant sources.
+3. Select **Create a lesson**, give it a question, describe where you are stuck, and select relevant sources. Leave Presentation on Auto or choose an approach and add visual directions.
 4. Open the finished video to watch, jump through its transcript, reveal the comprehension check, or ask questions.
 
 The profile is included automatically. Notes are included only when selected for that lesson. A note's presence is not treated as proof of understanding. Each lesson retains its original context snapshot even if you later edit your profile or remove a source.
@@ -144,3 +144,16 @@ Use a supported Node version for Electron packaging. The artwork source is `buil
 Real Codex lesson generation, Claude lesson generation, Claude transcript Q&A, macOS speech, MP4 playback, seeking, and narrow-screen layouts were exercised during implementation. CI covers storage, imports, context snapshots, retries, writer locking, local API access controls, and browser flows without contacting a model provider.
 
 See [architecture and next steps](docs/architecture.md) for extension points. MIT licensed.
+
+## Adaptive presentation
+
+Presentation preferences are **Auto**, **Worked example**, **Visual explanation**, **Code walkthrough**, and **Slides**. They guide the agent's choices rather than lock every chapter into one template. Physics can combine a force diagram, algebra, and a graph; biology can use structures and labeled processes; coding can show actual code, highlighted lines, and traced output.
+
+Equations use MathJax SVG, diagrams use positioned nodes and directional links, and plots use explicit coordinate data. Progressive equation steps, diagram nodes, process steps, and code highlights are evenly spaced across chapter audio. Reveals are not word-aligned. Code is never executed. These are structured explanatory graphics, not arbitrary animations or realistic illustrations. Existing lesson JSON remains compatible.
+
+```sh
+learnvid create "Projectile motion" --presentation auto --visual-brief "Use a diagram, then derive the equations and compare trajectories"
+learnvid create "Motion" --plan examples/motion.json --style auto --wait
+```
+
+The [visual schema](plugins/lesson-library/skills/lesson-library/references/visuals.md) documents the agent-authored content formats. Finished thumbnails come from the lesson's first visual.

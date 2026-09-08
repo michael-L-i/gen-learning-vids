@@ -27,7 +27,7 @@ Alternatively, delegate planning to the app's configured Codex or Claude provide
 learnvid create "Lesson topic" --brief /absolute/path/brief.md --source /absolute/path/selected-note.md
 ```
 
-`--source` is repeatable; `--style` accepts `paper`, `midnight`, or `sage`. Creation is asynchronous by default. Report the returned lesson ID and use `learnvid show ID` to check status. Use `--wait` when the user wants to wait for the finished video. Never report a queued or failed lesson as ready. `learnvid open` opens the running app's UI; start `learnvid serve --open` if needed.
+`--source` is repeatable. `--presentation auto|worked|diagram|code|slides` guides the teaching format; Auto lets the author choose scene by scene. Use [subject-specific visuals](references/visuals.md) for equations, diagrams, code, and plots. `--visual-brief` accepts extra visual directions. `--style auto|paper|midnight|sage` controls color separately. Creation is asynchronous by default. Report the returned lesson ID and use `learnvid show ID` to check status. Use `--wait` when the user wants to wait for the finished video. Never report a queued or failed lesson as ready. `learnvid open` opens the running app's UI; start `learnvid serve --open` if needed.
 
 ## Existing lessons and notes
 

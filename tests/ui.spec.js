@@ -60,7 +60,12 @@ test("notes, learning profile, and provider settings persist through the real AP
     .getByLabel("What would you like to understand?")
     .fill("How recursion returns");
   await page.getByLabel("My starting point", { exact: true }).check();
-  await page.getByRole("button", { name: "Field notes Green" }).click();
+  await page
+    .getByLabel("Presentation", { exact: true })
+    .selectOption("diagram");
+  await page
+    .getByLabel("Visual directions")
+    .fill("Use a flow diagram with arrows.");
   // Observe the UI's create request without invoking an authenticated external agent in CI.
   let submitted;
   await page.route("**/api/lessons", async (route) => {
@@ -79,7 +84,8 @@ test("notes, learning profile, and provider settings persist through the real AP
     page.getByText("Generation paused for this test."),
   ).toBeVisible();
   expect(submitted.topic).toBe("How recursion returns");
-  expect(submitted.style).toBe("sage");
+  expect(submitted.presentation).toBe("diagram");
+  expect(submitted.visualBrief).toBe("Use a flow diagram with arrows.");
   expect(submitted.sourceIds).toEqual([
     (await instance.library.sources())[0].id,
   ]);

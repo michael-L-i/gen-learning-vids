@@ -28,6 +28,32 @@ import {
 } from "lucide-react";
 import "./styles.css";
 
+const presentationOptions = [
+  ["auto", "Auto — adapt to the lesson"],
+  ["worked", "Worked example — diagrams, equations, checks"],
+  ["diagram", "Visual explanation — structures and processes"],
+  ["code", "Code walkthrough — code, traces, output"],
+  ["slides", "Slides — concepts and comparisons"],
+];
+function PresentationSelect({ value, onChange, label = "Presentation" }) {
+  return (
+    <label className="field">
+      {label}
+      <select
+        aria-label={label}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      >
+        {presentationOptions.map(([id, name]) => (
+          <option key={id} value={id}>
+            {name}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
 let csrf = "";
 async function api(url, options = {}) {
   const response = await fetch("/api" + url, {
@@ -255,6 +281,7 @@ function App() {
         <CreateLesson
           sources={sources}
           defaultStyle={bootstrap.settings.style}
+          defaultPresentation={bootstrap.settings.presentation}
           close={() => setCreating(false)}
           created={async (lesson) => {
             await reload();
@@ -420,10 +447,18 @@ function Catalog({ lessons, open, create }) {
     </div>
   );
 }
-function CreateLesson({ sources, defaultStyle, close, created }) {
+function CreateLesson({
+  sources,
+  defaultStyle,
+  defaultPresentation,
+  close,
+  created,
+}) {
   const [topic, setTopic] = useState(""),
     [goal, setGoal] = useState(""),
     [style, setStyle] = useState(defaultStyle),
+    [presentation, setPresentation] = useState(defaultPresentation || "auto"),
+    [visualBrief, setVisualBrief] = useState(""),
     [chosen, setChosen] = useState([]),
     [brief, setBrief] = useState(""),
     [busy, setBusy] = useState(false),
@@ -438,6 +473,8 @@ function CreateLesson({ sources, defaultStyle, close, created }) {
           topic,
           goal,
           style,
+          presentation,
+          visualBrief,
           sourceIds: chosen,
           brief,
         }),
@@ -516,37 +553,31 @@ function CreateLesson({ sources, defaultStyle, close, created }) {
             placeholder="Paste relevant context from ChatGPT, Claude, or another discussion…"
           />
         </details>
-        <div className="field">
-          Choose a visual style
-          <div className="style-picker">
-            {[
-              ["paper", "Paper", "Light"],
-              ["midnight", "Midnight", "Dark"],
-              ["sage", "Field notes", "Green"],
-            ].map(([id, title, description]) => (
-              <button
-                type="button"
-                key={id}
-                className={`style-option ${id} ${style === id ? "chosen" : ""}`}
-                onClick={() => setStyle(id)}
-              >
-                <div className="style-preview">
-                  <span>
-                    Lesson
-                    <br />
-                    preview
-                  </span>
-                  <i />
-                </div>
-                <strong>
-                  {title}
-                  {style === id && <Check size={15} />}
-                </strong>
-                <small>{description}</small>
-              </button>
-            ))}
-          </div>
-        </div>
+        <PresentationSelect value={presentation} onChange={setPresentation} />
+        <label className="field">
+          Visual directions <span className="optional">Optional</span>
+          <textarea
+            aria-label="Visual directions"
+            rows={2}
+            maxLength={2000}
+            value={visualBrief}
+            onChange={(e) => setVisualBrief(e.target.value)}
+            placeholder="For example: start with a force diagram, then derive the equation. Use plots to show how the result changes."
+          />
+        </label>
+        <details className="brief-details">
+          <summary>Color palette</summary>
+          <select
+            aria-label="Color palette"
+            value={style}
+            onChange={(e) => setStyle(e.target.value)}
+          >
+            <option value="auto">Auto</option>
+            <option value="paper">Paper</option>
+            <option value="midnight">Midnight</option>
+            <option value="sage">Field notes</option>
+          </select>
+        </details>
         <ErrorMessage message={error} />
         <div className="modal-footer">
           <p>Generates a video, transcript, and captions.</p>
@@ -1471,13 +1502,19 @@ function Settings({ bootstrap, update, notify }) {
               </div>
             </label>
           )}
+          <PresentationSelect
+            label="Default presentation"
+            value={settings.presentation}
+            onChange={(value) => change("presentation", value)}
+          />
           <label className="field">
-            Default visual style
+            Default color palette
             <select
-              aria-label="Default visual style"
+              aria-label="Default color palette"
               value={settings.style}
               onChange={(e) => change("style", e.target.value)}
             >
+              <option value="auto">Auto</option>
               <option value="paper">Paper</option>
               <option value="midnight">Midnight</option>
               <option value="sage">Field notes</option>

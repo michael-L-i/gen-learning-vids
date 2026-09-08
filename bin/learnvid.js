@@ -26,6 +26,8 @@ const { values, positionals } = parseArgs({
     goal: { type: "string" },
     brief: { type: "string" },
     style: { type: "string" },
+    presentation: { type: "string" },
+    "visual-brief": { type: "string" },
     plan: { type: "string" },
     help: { type: "boolean" },
   },
@@ -48,8 +50,9 @@ async function main() {
     console.log(`Lesson Library — one library, any entry point
 
 learnvid serve [--open] [--dev] [--port 4317]
-learnvid create "Topic" [--goal "What to understand"] [--source FILE] [--brief FILE] [--style paper|midnight|sage] [--wait]
+learnvid create "Topic" [--goal "What to understand"] [--source FILE] [--brief FILE] [--style auto|paper|midnight|sage] [--wait]
 learnvid create "Topic" --plan FILE [--wait]   Render an agent-authored lesson JSON
+learnvid create "Topic" --presentation auto|worked|diagram|code|slides --visual-brief "Visual directions"
 learnvid list
 learnvid show ID
 learnvid ask ID "Question about the lesson"
@@ -108,6 +111,8 @@ Creation runs in the background unless --wait is provided. Source files are copi
           topic: args.join(" ") || plan?.title,
           goal: values.goal,
           style: values.style,
+          presentation: values.presentation,
+          visualBrief: values["visual-brief"],
           sourceIds,
           brief: values.brief ? await fs.readFile(values.brief, "utf8") : "",
         },

@@ -1,0 +1,106 @@
+{
+  "title": "Motion: from force to simulation",
+  "summary": "A force diagram, a derivation, a velocity plot, and a short simulation describe the same accelerating cart.",
+  "learningObjective": "Connect net force, acceleration, velocity, and a simple numerical update.",
+  "assumedKnowledge": ["Mass and velocity", "Basic arithmetic"],
+  "tags": ["Physics", "Simulation"],
+  "scenes": [
+    {
+      "title": "Define the horizontal net force",
+      "narration": "Consider a two kilogram cart on a level track. Its horizontal net force is six newtons to the right. The arrow shows that direction. We are modeling horizontal motion only; the vertical forces balance.",
+      "visual": "diagram",
+      "visualReason": "A spatial diagram identifies the object and the direction of net force.",
+      "points": ["Mass: 2 kg", "Horizontal net force: 6 N right"],
+      "takeaway": "Use the net force, after accounting for any opposing forces.",
+      "content": {
+        "kind": "diagram",
+        "nodes": [
+          {
+            "id": "cart",
+            "label": "Cart · 2 kg",
+            "x": 30,
+            "y": 50,
+            "shape": "box"
+          },
+          {
+            "id": "force",
+            "label": "6 N to the right",
+            "x": 85,
+            "y": 50,
+            "shape": "box"
+          }
+        ],
+        "edges": [{ "from": "cart", "to": "force", "label": "net force" }]
+      }
+    },
+    {
+      "title": "Solve for acceleration",
+      "narration": "Newton's second law relates net force to mass times acceleration. Divide both sides by mass. Substituting six newtons and two kilograms gives three meters per second squared. The velocity therefore increases by three meters per second every second.",
+      "visual": "equation",
+      "visualReason": "Successive equations expose the algebra and units instead of describing the calculation in bullets.",
+      "points": ["F = ma", "a = 3 m/s²"],
+      "takeaway": "Constant net force and constant mass give constant acceleration.",
+      "content": {
+        "kind": "equation",
+        "steps": [
+          {
+            "tex": "F_{\\mathrm{net}}=ma",
+            "explanation": "Start from Newton’s second law."
+          },
+          {
+            "tex": "a=\\frac{F_{\\mathrm{net}}}{m}",
+            "explanation": "Divide both sides by mass."
+          },
+          {
+            "tex": "a=\\frac{6\\,\\mathrm{N}}{2\\,\\mathrm{kg}}=3\\,\\mathrm{m/s^2}",
+            "explanation": "Substitute values and keep the units."
+          }
+        ]
+      }
+    },
+    {
+      "title": "Read acceleration from a velocity graph",
+      "narration": "Starting from rest, velocity equals acceleration times elapsed time. The graph rises by three meters per second each second. Its slope is acceleration. A straight rising velocity graph means constant acceleration, not constant velocity.",
+      "visual": "plot",
+      "visualReason": "The graph makes the distinction between velocity and its rate of change visible.",
+      "points": ["v = 3t", "Slope = acceleration"],
+      "takeaway": "The slope of velocity versus time gives acceleration.",
+      "content": {
+        "kind": "plot",
+        "xLabel": "Time (s)",
+        "yLabel": "Velocity (m/s)",
+        "series": [
+          {
+            "name": "v = 3t, starting from rest",
+            "points": [
+              { "x": 0, "y": 0 },
+              { "x": 1, "y": 3 },
+              { "x": 2, "y": 6 },
+              { "x": 3, "y": 9 },
+              { "x": 4, "y": 12 }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "title": "Trace the same model in code",
+      "narration": "This Python loop updates velocity once per second. Each iteration adds acceleration times the time step. After four updates the velocity is twelve meters per second. For this constant acceleration model, these velocity updates match the graph exactly.",
+      "visual": "code",
+      "visualReason": "A code trace connects the equations to an executable model without assuming the code was run.",
+      "points": ["Update: v += a × dt", "Four one-second steps"],
+      "takeaway": "The update rule is the same relationship expressed as a loop.",
+      "content": {
+        "kind": "code",
+        "language": "Python",
+        "code": "mass = 2\nnet_force = 6\na = net_force / mass\nv = 0\ndt = 1\n\nfor step in range(4):\n    v += a * dt\n    print(v)",
+        "highlightLines": [3, 8, 9],
+        "output": "3.0, 6.0, 9.0, 12.0"
+      }
+    }
+  ],
+  "check": {
+    "question": "If the cart’s mass doubles while its net force remains 6 N, what is its velocity after four seconds from rest?",
+    "answer": "Acceleration becomes 6/4 = 1.5 m/s². After four seconds from rest, velocity is 1.5 × 4 = 6 m/s."
+  }
+}
