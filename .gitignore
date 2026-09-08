@@ -9,6 +9,7 @@ coverage/
 test-results/
 playwright-report/
 .local/
+.local-*
 library/
 *.log
 *.mp4

@@ -4,7 +4,9 @@
   "private": true,
   "type": "module",
   "description": "A personal video learning library, powered by your local coding agent.",
-  "bin": { "learnvid": "./bin/learnvid.js" },
+  "bin": {
+    "learnvid": "./bin/learnvid.js"
+  },
   "scripts": {
     "dev": "node bin/learnvid.js serve --dev",
     "build": "vite build",
@@ -29,16 +31,32 @@
     "@vitejs/plugin-react": "^4.7.0",
     "electron": "^38.0.0",
     "electron-builder": "^26.0.12",
+    "prettier": "^3.6.2",
     "vite": "^6.4.3"
   },
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "build": {
     "appId": "dev.lessonlibrary.app",
     "productName": "Lesson Library",
     "asar": true,
-    "files": ["dist/**", "server/**", "bin/**", "desktop/**", "package.json"],
-    "extraMetadata": { "main": "desktop/main.cjs" },
-    "mac": { "category": "public.app-category.education", "target": "dmg" },
-    "directories": { "output": "release" }
+    "files": [
+      "dist/**",
+      "server/**",
+      "bin/**",
+      "desktop/**",
+      "package.json"
+    ],
+    "extraMetadata": {
+      "main": "desktop/main.cjs"
+    },
+    "mac": {
+      "category": "public.app-category.education",
+      "target": "dmg"
+    },
+    "directories": {
+      "output": "release"
+    }
   }
 }

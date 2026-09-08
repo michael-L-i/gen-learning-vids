@@ -1,0 +1,12 @@
+{
+  "title": "Recursion, one return at a time",
+  "summary": "A short example lesson about the calls that wait, and the base case that brings them back.",
+  "learningObjective": "Explain why recursive calls return in the opposite order from how they started.",
+  "assumedKnowledge": ["You have seen a function call before."],
+  "tags": ["Programming", "Recursion"],
+  "scenes": [
+    { "title": "Every call leaves a bookmark", "narration": "Think of reading a recipe that asks you to make a sauce first. You leave a bookmark, follow the sauce recipe, and return to where you stopped. A function call works the same way. Each call keeps its own place and waits for the next call to finish.", "visual": "steps", "points": ["Start the recipe", "Leave a bookmark and make the sauce", "Return to the bookmarked step"], "takeaway": "Calling another function does not erase where you were." },
+    { "title": "The base case starts the return journey", "narration": "Now imagine each recipe points to a smaller recipe. Eventually, one must be simple enough to finish directly. That is the base case. Once it finishes, the waiting recipes continue, starting with the most recent one. In recursion, the deepest call returns first. Every caller then has what it needs to finish.", "visual": "concept", "points": ["A smaller problem at each call", "A base case that finishes directly", "The most recent caller continues first"], "takeaway": "The base case stops new calls and lets waiting calls return." }
+  ],
+  "check": { "question": "If function A calls B, and B calls C, which function returns first when C is the base case?", "answer": "C returns first because it can finish directly. B then continues using C’s result, and finally A continues using B’s result." }
+}
