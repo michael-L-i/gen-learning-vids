@@ -633,7 +633,10 @@ pre {
 .brief-details summary {
   cursor: pointer;
 }
-.brief-details textarea {
+.brief-details textarea,
+.brief-details select {
+  display: block;
+  width: 100%;
   margin-top: 10px;
 }
 .style-picker {
