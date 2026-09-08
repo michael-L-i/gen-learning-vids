@@ -995,60 +995,8 @@ function Chat({ id, seconds, ready, seek }) {
     </aside>
   );
 }
-const sourceKindLabels = {
-  note: "Pasted text",
-  file: "File",
-  folder: "Folder note",
-  obsidian: "Obsidian note",
-  memory: "ChatGPT memory",
-  conversation: "Chat export",
-};
-const sourceTypes = [
-  {
-    id: "file",
-    title: "File",
-    description: "Markdown, text, or JSON",
-    icon: FileText,
-    group: "Files & notes",
-  },
-  {
-    id: "folder",
-    title: "Folder",
-    description: "Select notes from a local folder",
-    icon: FolderOpen,
-    group: "Files & notes",
-  },
-  {
-    id: "obsidian",
-    title: "Obsidian vault",
-    description: "Select notes from your vault",
-    icon: BookOpen,
-    group: "Files & notes",
-  },
-  {
-    id: "text",
-    title: "Paste text",
-    description: "Notes, questions, or a learning brief",
-    icon: FileText,
-    group: "Files & notes",
-  },
-  {
-    id: "memory",
-    title: "ChatGPT memory",
-    description: "Paste saved memories or a summary",
-    icon: UserRound,
-    group: "Conversations & memory",
-  },
-  {
-    id: "conversation",
-    title: "Chat export",
-    description: "Import a ChatGPT or Claude JSON file",
-    icon: MessageCircle,
-    group: "Conversations & memory",
-  },
-];
 function Sources({ sources, reload, notify }) {
-  const [adding, setAdding] = useState(false),
+  const [mode, setMode] = useState(null),
     [error, setError] = useState(""),
     [preview, setPreview] = useState(null);
   const remove = async (source) => {
@@ -1067,16 +1015,43 @@ function Sources({ sources, reload, notify }) {
     }
   };
   return (
-    <div className="page sources-page">
+    <div className="page">
       <div className="page-heading">
         <div>
           <h1>Sources & notes</h1>
+          <p>Import notes and select which to include in each lesson.</p>
         </div>
-        <button className="primary" onClick={() => setAdding(true)}>
+        <button className="primary" onClick={() => setMode("text")}>
           <Plus size={18} /> Add a source
         </button>
       </div>
       <ErrorMessage message={error} />
+      <div className="import-cards">
+        <button onClick={() => setMode("folder")}>
+          <FolderOpen size={26} />
+          <h3>Import Obsidian notes</h3>
+          <p>Choose a folder, preview its notes, and select what to import.</p>
+          <span>
+            Browse notes <ArrowRight size={16} />
+          </span>
+        </button>
+        <button onClick={() => setMode("text")}>
+          <MessageCircle size={26} />
+          <h3>Import text or a conversation</h3>
+          <p>
+            Paste a learning brief, or import a text file or chat JSON export.
+          </p>
+          <span>
+            Add context <ArrowRight size={16} />
+          </span>
+        </button>
+      </div>
+      <div className="section-heading">
+        <h2>Imported sources</h2>
+        <span>
+          {sources.length} {sources.length === 1 ? "source" : "sources"}
+        </span>
+      </div>
       {!sources.length ? (
         <div className="empty-shelf">
           <FileText size={28} />
@@ -1101,8 +1076,12 @@ function Sources({ sources, reload, notify }) {
               >
                 <strong>{s.title}</strong>
                 <span>
-                  {sourceKindLabels[s.kind] || "Note"} ·{" "}
-                  {s.characters.toLocaleString()} characters · Added{" "}
+                  {s.kind === "obsidian"
+                    ? "Obsidian note"
+                    : s.kind === "conversation"
+                      ? "Conversation"
+                      : "Note"}{" "}
+                  · {s.characters.toLocaleString()} characters · Added{" "}
                   {date(s.importedAt)}
                 </span>
               </button>
@@ -1113,11 +1092,12 @@ function Sources({ sources, reload, notify }) {
           ))}
         </div>
       )}
-      {adding && (
+      {mode && (
         <ImportModal
-          close={() => setAdding(false)}
+          mode={mode}
+          close={() => setMode(null)}
           done={async (count) => {
-            setAdding(false);
+            setMode(null);
             await reload();
             notify(
               `${count} ${count === 1 ? "source added" : "sources added"}`,
@@ -1139,8 +1119,7 @@ function Sources({ sources, reload, notify }) {
     </div>
   );
 }
-function ImportModal({ close, done }) {
-  const [mode, setMode] = useState("choose");
+function ImportModal({ mode, close, done }) {
   const [title, setTitle] = useState(""),
     [content, setContent] = useState(""),
     [filename, setFilename] = useState(""),
@@ -1160,70 +1139,17 @@ function ImportModal({ close, done }) {
       setBusy(false);
     }
   };
-  const folderMode = mode === "folder" || mode === "obsidian";
-  const fileMode = mode === "file" || mode === "conversation";
-  const choose = (next) => {
-    setMode(next);
-    setTitle(next === "memory" ? "ChatGPT memory" : "");
-    setContent("");
-    setFilename("");
-    setFolder("");
-    setScan(null);
-    setChosen([]);
-    setError("");
-  };
   return (
     <Modal
-      title={
-        mode === "choose"
-          ? "Add a source"
-          : sourceTypes.find((type) => type.id === mode).title
-      }
+      title={mode === "folder" ? "Import notes folder" : "Add source"}
       close={close}
       wide
     >
-      {mode !== "choose" && (
-        <button
-          className="text-button source-back"
-          disabled={busy}
-          onClick={() => choose("choose")}
-        >
-          <ArrowLeft size={15} /> Source types
-        </button>
-      )}
-      {mode === "choose" ? (
-        <div className="source-types">
-          {["Files & notes", "Conversations & memory"].map((group) => (
-            <section key={group}>
-              <h3>{group}</h3>
-              <div className="source-type-grid">
-                {sourceTypes
-                  .filter((type) => type.group === group)
-                  .map(({ id, title, description, icon: Icon }) => (
-                    <button
-                      key={id}
-                      className="source-type"
-                      onClick={() => choose(id)}
-                    >
-                      <Icon size={20} />
-                      <span>
-                        <strong>{title}</strong>
-                        <small>{description}</small>
-                      </span>
-                      <ArrowRight size={15} />
-                    </button>
-                  ))}
-              </div>
-            </section>
-          ))}
-        </div>
-      ) : folderMode ? (
+      {mode === "folder" ? (
         <>
           <p className="intro-copy">
-            {mode === "obsidian"
-              ? "Enter your Obsidian vault path."
-              : "Enter a folder path on this computer."}{" "}
-            Select Markdown or text notes to import as copies.
+            Enter an Obsidian vault or notes folder on this computer. We’ll copy
+            only the notes you select. Originals stay where they are.
           </p>
           <form
             onSubmit={(e) => {
@@ -1235,21 +1161,12 @@ function ImportModal({ close, done }) {
             }}
           >
             <label className="field">
-              {mode === "obsidian" ? "Vault path" : "Folder path"}
+              Notes folder
               <input
                 required
-                disabled={busy}
-                placeholder={
-                  mode === "obsidian"
-                    ? "~/Documents/My Vault"
-                    : "~/Documents/Notes"
-                }
+                placeholder="~/Documents/My Vault"
                 value={folder}
-                onChange={(e) => {
-                  setFolder(e.target.value);
-                  setScan(null);
-                  setChosen([]);
-                }}
+                onChange={(e) => setFolder(e.target.value)}
               />
             </label>
             <button className="secondary" disabled={busy}>
@@ -1306,9 +1223,8 @@ function ImportModal({ close, done }) {
                     const result = await post("/sources/import", {
                       root: scan.root,
                       paths: chosen,
-                      kind: mode,
                     });
-                    await done(result.length);
+                    done(result.length);
                   })
                 }
               >
@@ -1322,83 +1238,32 @@ function ImportModal({ close, done }) {
           onSubmit={(e) => {
             e.preventDefault();
             work(async () => {
-              await post("/sources", {
-                title,
-                content,
-                filename,
-                kind: mode === "text" ? "note" : mode,
-              });
-              await done(1);
+              await post("/sources", { title, content, filename });
+              done(1);
             });
           }}
         >
-          {fileMode && (
-            <label className="upload-zone">
-              <Upload size={22} />
-              <span>
-                {filename ||
-                  (mode === "conversation"
-                    ? "Choose a JSON export file"
-                    : "Choose a file")}
-              </span>
-              <input
-                type="file"
-                aria-label={
-                  mode === "conversation" ? "Chat export file" : "Source file"
+          <label className="upload-zone">
+            <Upload size={22} />
+            <span>Choose a Markdown, text, or JSON export file</span>
+            <input
+              type="file"
+              accept=".md,.txt,.json"
+              onChange={async (e) => {
+                const f = e.target.files[0];
+                if (!f) return;
+                if (f.size > 3000000) {
+                  setError(
+                    "Choose a smaller export (up to 3 MB), or paste a relevant conversation.",
+                  );
+                  return;
                 }
-                accept={mode === "conversation" ? ".json" : ".md,.txt,.json"}
-                required={!filename}
-                disabled={busy}
-                onChange={async (e) => {
-                  const f = e.target.files[0];
-                  if (!f) return;
-                  setFilename("");
-                  setContent("");
-                  setTitle("");
-                  if (
-                    !(
-                      mode === "conversation" ? /\.json$/i : /\.(md|txt|json)$/i
-                    ).test(f.name)
-                  ) {
-                    setError("Choose a supported file type.");
-                    e.target.value = "";
-                    return;
-                  }
-                  if (f.size > 3000000) {
-                    e.target.value = "";
-                    setError(
-                      "Choose a smaller export (up to 3 MB), or paste a relevant conversation.",
-                    );
-                    return;
-                  }
-                  try {
-                    const text = await f.text();
-                    setTitle(f.name.replace(/\.[^.]+$/, ""));
-                    setFilename(f.name);
-                    setContent(text);
-                    setError("");
-                  } catch {
-                    setError(
-                      "This file could not be read. Try choosing it again.",
-                    );
-                  }
-                }}
-              />
-            </label>
-          )}
-          {mode === "memory" && (
-            <p className="fine-print source-help">
-              Paste saved memories or a learning summary. This imports a copy;
-              it does not connect to your ChatGPT account.
-            </p>
-          )}
-          {mode === "conversation" && (
-            <p className="fine-print source-help">
-              Use a JSON conversation export, not a ZIP archive. Import relevant
-              conversations only (up to 3 MB). Messages are saved as reference
-              text.
-            </p>
-          )}
+                setTitle(f.name.replace(/\.[^.]+$/, ""));
+                setFilename(f.name);
+                setContent(await f.text());
+              }}
+            />
+          </label>
           <label className="field">
             Title
             <input
@@ -1406,23 +1271,23 @@ function ImportModal({ close, done }) {
               maxLength={200}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Source title"
+              placeholder="What I know about neural networks"
             />
           </label>
           <label className="field">
-            {mode === "memory" ? "Memory" : fileMode ? "File contents" : "Text"}
+            Your notes or conversation
             <textarea
               required
               rows={9}
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              placeholder={
-                mode === "memory"
-                  ? "What you know, learning preferences, and current goals…"
-                  : "Add source text…"
-              }
+              placeholder="Paste a learning summary, an unresolved question, or notes you’d like to learn from…"
             />
           </label>
+          <p className="fine-print">
+            Chat exports are imported as reference text. This does not connect
+            to or continuously sync your ChatGPT or Claude account.
+          </p>
           <div className="modal-footer">
             <span />
             <button className="primary" disabled={busy}>

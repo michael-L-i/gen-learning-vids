@@ -214,22 +214,15 @@ export async function createApp(
   app.post(
     "/api/sources",
     wrap(async (req, res) => {
-      const { title, content, filename = "", kind } = req.body;
+      const { title, content, filename = "" } = req.body;
       if (typeof content !== "string" || typeof filename !== "string")
         throw new Error("Provide text or a supported export.");
-      if (
-        kind !== undefined &&
-        !["note", "file", "memory", "conversation"].includes(kind)
-      )
-        throw new Error("Choose a supported source type.");
       res.status(201).json(
         await library.addSource({
           title,
           content: textFromExport(content, filename),
-          origin:
-            filename ||
-            (kind === "memory" ? "Pasted ChatGPT memory" : "Pasted text"),
-          kind: kind || (/\.json$/i.test(filename) ? "conversation" : "note"),
+          origin: filename || "Pasted text",
+          kind: filename.endsWith(".json") ? "conversation" : "note",
         }),
       );
     }),
@@ -254,14 +247,7 @@ export async function createApp(
     wrap(async (req, res) =>
       res
         .status(201)
-        .json(
-          await importNotes(
-            library,
-            req.body.root,
-            req.body.paths,
-            req.body.kind,
-          ),
-        ),
+        .json(await importNotes(library, req.body.root, req.body.paths)),
     ),
   );
   app.get(

@@ -5,7 +5,7 @@ import os from "node:os";
 const resolveUserPath = (p) =>
   path.resolve(p.startsWith("~/") ? path.join(os.homedir(), p.slice(2)) : p);
 export function textFromExport(text, filename = "") {
-  if (!/\.json$/i.test(filename)) return text;
+  if (!filename.endsWith(".json")) return text;
   let data;
   try {
     data = JSON.parse(text);
@@ -92,14 +92,7 @@ export async function scanNotes(input) {
   await walk(root, 0);
   return { root, notes, capped };
 }
-export async function importNotes(
-  library,
-  rootInput,
-  selected,
-  kind = "obsidian",
-) {
-  if (!["folder", "obsidian"].includes(kind))
-    throw new Error("Choose a folder or Obsidian source.");
+export async function importNotes(library, rootInput, selected) {
   if (!Array.isArray(selected) || selected.length < 1 || selected.length > 100)
     throw new Error("Choose between 1 and 100 notes.");
   const root = await fs.realpath(resolveUserPath(rootInput));
@@ -117,7 +110,7 @@ export async function importNotes(
         title: path.basename(file).replace(/\.(md|txt)$/i, ""),
         content: await fs.readFile(file, "utf8"),
         origin: file,
-        kind,
+        kind: "obsidian",
       }),
     );
   }

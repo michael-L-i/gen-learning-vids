@@ -32,10 +32,9 @@ test("notes, learning profile, and provider settings persist through the real AP
     .getByRole("button", { name: "Sources & notes", exact: true })
     .click();
   await page.getByRole("button", { name: "Add a source", exact: true }).click();
-  await page.getByRole("button", { name: "Paste text" }).click();
   await page.getByLabel("Title", { exact: true }).fill("My starting point");
   await page
-    .getByLabel("Text", { exact: true })
+    .getByLabel("Your notes or conversation")
     .fill("I know loops but recursion is unfamiliar.");
   await page.getByRole("button", { name: "Add to sources" }).click();
   await expect(
@@ -142,129 +141,4 @@ test("voice preview uses the selected voice without saving the form", async ({
   );
   await expect(page.getByLabel("Voice preview", { exact: true })).toBeVisible();
   expect((await instance.library.settings()).kokoroVoice).toBe("af_heart");
-});
-
-test("source picker imports files, memory, and selected folder notes", async ({
-  page,
-}, testInfo) => {
-  await page.goto(instance.url);
-  await page
-    .getByRole("button", { name: "Sources & notes", exact: true })
-    .click();
-  const open = async (name) => {
-    await page
-      .getByRole("button", { name: "Add a source", exact: true })
-      .click();
-    await page.getByRole("button", { name, exact: false }).click();
-  };
-  await page.getByRole("button", { name: "Add a source", exact: true }).click();
-  await page.screenshot({ path: testInfo.outputPath("source-picker.png") });
-  await page.getByRole("button", { name: "ChatGPT memory Paste" }).click();
-  await expect(
-    page.getByText(/does not connect to your ChatGPT account/),
-  ).toBeVisible();
-  await page
-    .getByLabel("Memory", { exact: true })
-    .fill("I know algebra and prefer diagrams.");
-  await page.getByRole("button", { name: "Add to sources" }).click();
-  await expect(page.getByRole("dialog")).toHaveCount(0);
-  const memory = (await instance.library.sources()).find(
-    (s) => s.kind === "memory",
-  );
-  expect(memory.content).toBe("I know algebra and prefer diagrams.");
-
-  for (const [mode, name, contents, expected] of [
-    [
-      "File Markdown",
-      "Calculus.md",
-      "# Derivatives\nRate of change",
-      "Rate of change",
-    ],
-    [
-      "Chat export Import",
-      "Conversation.JSON",
-      JSON.stringify([
-        {
-          name: "Functions",
-          chat_messages: [{ sender: "human", text: "Explain return values" }],
-        },
-      ]),
-      "human: Explain return values",
-    ],
-  ]) {
-    await open(mode);
-    await page
-      .getByLabel(mode.startsWith("File") ? "Source file" : "Chat export file")
-      .setInputFiles({
-        name,
-        mimeType: "text/plain",
-        buffer: Buffer.from(contents),
-      });
-    await page.getByRole("button", { name: "Add to sources" }).click();
-    await expect(page.getByRole("dialog")).toHaveCount(0);
-    const source = (await instance.library.sources()).find(
-      (s) => s.origin === name,
-    );
-    expect(source.content).toContain(expected);
-    expect(source.kind).toBe(mode.startsWith("File") ? "file" : "conversation");
-  }
-
-  const folder = path.join(root, "notes-to-import");
-  await fs.mkdir(folder);
-  await fs.writeFile(
-    path.join(folder, "Selected.md"),
-    "Only this note is selected.",
-  );
-  await fs.writeFile(
-    path.join(folder, "Unselected.md"),
-    "Do not import this note.",
-  );
-  for (const [mode, label, kind] of [
-    ["Folder Select", "Folder path", "folder"],
-    ["Obsidian vault Select", "Vault path", "obsidian"],
-  ]) {
-    await open(mode);
-    await page.getByLabel(label).fill(folder);
-    await page.getByRole("button", { name: "Preview notes" }).click();
-    await page.getByLabel("Selected.md", { exact: true }).check();
-    await page.getByRole("button", { name: "Import 1 selected notes" }).click();
-    await expect(page.getByRole("dialog")).toHaveCount(0);
-    const source = (await instance.library.sources()).find(
-      (s) => s.kind === kind,
-    );
-    expect(source.content).toBe("Only this note is selected.");
-    expect(
-      (await instance.library.sources()).some((s) => s.title === "Unselected"),
-    ).toBe(false);
-  }
-  expect(await fs.readFile(path.join(folder, "Selected.md"), "utf8")).toBe(
-    "Only this note is selected.",
-  );
-});
-
-test("source types and back navigation fit a narrow screen", async ({
-  page,
-}, testInfo) => {
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto(instance.url);
-  await page
-    .getByRole("button", { name: "Sources & notes", exact: true })
-    .click();
-  await page.screenshot({ path: testInfo.outputPath("sources-mobile.png") });
-  await page.getByRole("button", { name: "Add a source", exact: true }).click();
-  await page.screenshot({
-    path: testInfo.outputPath("source-picker-mobile.png"),
-  });
-  expect(
-    await page.evaluate(
-      () => document.documentElement.scrollWidth <= window.innerWidth,
-    ),
-  ).toBe(true);
-  await page.getByRole("button", { name: "Obsidian vault Select" }).click();
-  await expect(page.getByLabel("Vault path")).toBeVisible();
-  await page.getByRole("button", { name: "Source types" }).click();
-  await page.getByRole("button", { name: "Paste text" }).click();
-  await expect(page.getByLabel("Text", { exact: true })).toBeVisible();
-  await page.keyboard.press("Escape");
-  await expect(page.getByRole("dialog")).toHaveCount(0);
 });
