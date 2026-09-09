@@ -1129,6 +1129,14 @@ pre {
   color: #919a83;
   padding: 15px 0;
 }
+.source-upload-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.source-upload-help {
+  margin: 10px 0 24px;
+}
 .source-types section + section {
   margin-top: 24px;
 }

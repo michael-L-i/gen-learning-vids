@@ -175,7 +175,7 @@ test("source picker imports files, memory, and selected folder notes", async ({
 
   for (const [mode, name, contents, expected] of [
     [
-      "File Markdown",
+      "Upload file",
       "Calculus.md",
       "# Derivatives\nRate of change",
       "Rate of change",
@@ -197,7 +197,7 @@ test("source picker imports files, memory, and selected folder notes", async ({
       mimeType: "text/plain",
       buffer: Buffer.from(contents),
     };
-    if (mode.startsWith("File")) {
+    if (mode === "Upload file") {
       await page
         .getByRole("button", { name: "Add a source", exact: true })
         .click();
@@ -214,8 +214,8 @@ test("source picker imports files, memory, and selected folder notes", async ({
       (s) => s.origin === name,
     );
     expect(source.content).toContain(expected);
-    expect(source.kind).toBe(mode.startsWith("File") ? "file" : "conversation");
-    if (mode.startsWith("File")) expect(source.title).toBe(name);
+    expect(source.kind).toBe(mode === "Upload file" ? "file" : "conversation");
+    if (mode === "Upload file") expect(source.title).toBe(name);
   }
 
   const folder = path.join(root, "notes-to-import");
@@ -248,7 +248,7 @@ test("source picker imports files, memory, and selected folder notes", async ({
   await fs.writeFile(path.join(folder, "ignored.pdf"), "unsupported");
   await page.getByRole("button", { name: "Add a source", exact: true }).click();
   const directoryChooser = page.waitForEvent("filechooser");
-  await page.getByRole("button", { name: "Folder Upload" }).click();
+  await page.getByRole("button", { name: "Upload folder" }).click();
   await (await directoryChooser).setFiles(folder);
   await expect(page.getByRole("dialog")).toHaveCount(0);
   const uploadedFolder = (await instance.library.sources()).find(

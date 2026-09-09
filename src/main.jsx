@@ -1005,20 +1005,6 @@ const sourceKindLabels = {
 };
 const sourceTypes = [
   {
-    id: "file",
-    title: "File",
-    description: "Markdown, text, or JSON",
-    icon: FileText,
-    group: "Files & notes",
-  },
-  {
-    id: "folder",
-    title: "Folder",
-    description: "Upload Markdown, text, and JSON files",
-    icon: FolderOpen,
-    group: "Files & notes",
-  },
-  {
     id: "obsidian",
     title: "Obsidian vault",
     description: "Select notes from your vault",
@@ -1245,6 +1231,25 @@ function ImportModal({ close, done }) {
             multiple
             onChange={(e) => upload(e, "folder")}
           />
+          <div className="source-upload-actions">
+            <button
+              className="secondary"
+              disabled={busy}
+              onClick={() => fileInput.current.click()}
+            >
+              <Upload size={17} /> Upload file
+            </button>
+            <button
+              className="secondary"
+              disabled={busy}
+              onClick={() => folderInput.current.click()}
+            >
+              <FolderOpen size={17} /> Upload folder
+            </button>
+          </div>
+          <p className="fine-print source-upload-help">
+            Markdown, text, or JSON. Uses the file or folder name as the title.
+          </p>
           {["Files & notes", "Conversations & memory"].map((group) => (
             <section key={group}>
               <h3>{group}</h3>
@@ -1256,22 +1261,14 @@ function ImportModal({ close, done }) {
                       key={id}
                       className="source-type"
                       disabled={busy}
-                      onClick={() =>
-                        id === "file"
-                          ? fileInput.current.click()
-                          : id === "folder"
-                            ? folderInput.current.click()
-                            : choose(id)
-                      }
+                      onClick={() => choose(id)}
                     >
                       <Icon size={20} />
                       <span>
                         <strong>{title}</strong>
                         <small>{description}</small>
                       </span>
-                      {id !== "file" && id !== "folder" && (
-                        <ArrowRight size={15} />
-                      )}
+                      <ArrowRight size={15} />
                     </button>
                   ))}
               </div>
