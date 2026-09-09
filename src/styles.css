@@ -1841,3 +1841,107 @@ pre {
   height: 36px;
   max-width: 100%;
 }
+
+.brand-logo {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+.brand-stack {
+  display: flex;
+  gap: 8px;
+}
+.brand-stack .brand-logo {
+  width: 18px;
+  height: 18px;
+}
+.source-type-wide {
+  grid-column: 1 / -1;
+}
+.chat-service-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.chat-service-grid > p {
+  grid-column: 1 / -1;
+  margin: 8px 0 0;
+}
+.chat-service strong {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+}
+.service-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  font-weight: 500;
+}
+.import-content-kind {
+  display: flex;
+  gap: 20px;
+  padding: 0;
+  border: 0;
+  margin: 0 0 20px;
+}
+.import-content-kind legend {
+  font-size: 12px;
+  margin-bottom: 10px;
+  color: var(--muted);
+}
+.import-content-kind label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+.import-content-kind input {
+  width: auto;
+  margin: 0;
+  accent-color: var(--accent);
+}
+.export-help {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 12px 0 22px;
+}
+.export-help summary {
+  cursor: pointer;
+}
+.export-help p {
+  line-height: 1.65;
+  margin: 12px 0;
+}
+.export-help a {
+  color: var(--accent);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.vault-list {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 20px;
+}
+.vault-list small {
+  overflow-wrap: anywhere;
+}
+.selected-vault {
+  border-color: var(--accent);
+  background: #f3f6f8;
+}
+.manual-vault {
+  margin-top: 16px;
+}
+@media (max-width: 700px) {
+  .chat-service-grid {
+    grid-template-columns: 1fr;
+  }
+  .brand-stack {
+    display: none;
+  }
+}

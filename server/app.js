@@ -14,11 +14,18 @@ import {
   importNotes,
   textFromExport,
   importUpload,
+  discoverObsidianVaults,
+  conversationText,
+  chatProviders,
 } from "./imports.js";
 
 export async function createApp(
   library,
-  { dev = false, synthesize = speak } = {},
+  {
+    dev = false,
+    synthesize = speak,
+    discoverVaults = discoverObsidianVaults,
+  } = {},
 ) {
   await library.init();
   const app = express();
@@ -219,7 +226,18 @@ export async function createApp(
   app.post(
     "/api/sources",
     wrap(async (req, res) => {
-      const { title, content, filename = "", kind } = req.body;
+      const {
+        title,
+        content,
+        filename = "",
+        kind,
+        provider,
+        format = "auto",
+      } = req.body;
+      if (provider !== undefined && !chatProviders.includes(provider))
+        throw new Error("Choose a supported chat service.");
+      if (!["auto", "text"].includes(format))
+        throw new Error("Choose a supported text format.");
       if (typeof content !== "string" || typeof filename !== "string")
         throw new Error("Provide text or a supported export.");
       if (
@@ -230,13 +248,32 @@ export async function createApp(
       res.status(201).json(
         await library.addSource({
           title,
-          content: textFromExport(content, filename),
+          content:
+            format === "text"
+              ? content
+              : provider
+                ? conversationText(content, filename, provider)
+                : textFromExport(content, filename),
+          provider,
           origin:
             filename ||
-            (kind === "memory" ? "Pasted ChatGPT memory" : "Pasted text"),
+            (provider
+              ? `Pasted ${provider} ${kind === "memory" ? "memory" : "conversation"}`
+              : "Pasted text"),
           kind: kind || (/\.json$/i.test(filename) ? "conversation" : "note"),
         }),
       );
+    }),
+  );
+  app.get(
+    "/api/sources/obsidian/vaults",
+    wrap(async (_, res) => res.json(await discoverVaults())),
+  );
+  app.post(
+    "/api/sources/preview",
+    wrap(async (req, res) => {
+      const { content, filename, provider } = req.body;
+      res.json({ content: conversationText(content, filename, provider) });
     }),
   );
   app.post(
@@ -332,9 +369,10 @@ export async function startServer({
   port = 4317,
   dev = false,
   synthesize,
+  discoverVaults,
 } = {}) {
   const library = new Library(root);
-  const app = await createApp(library, { dev, synthesize });
+  const app = await createApp(library, { dev, synthesize, discoverVaults });
   const server = await new Promise((resolve, reject) => {
     const s = app.listen(port, "127.0.0.1", () => resolve(s));
     s.once("error", reject);

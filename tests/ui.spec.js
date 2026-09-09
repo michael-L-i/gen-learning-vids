@@ -8,7 +8,22 @@ import { pcmWave } from "../server/speech.js";
 let instance, root;
 test.beforeAll(async () => {
   root = await fs.mkdtemp(path.join(os.tmpdir(), "lesson-ui-"));
+  await fs.mkdir(path.join(root, "known-vault"));
+  await fs.writeFile(
+    path.join(root, "known-vault", "Known note.md"),
+    "Discovered note.",
+  );
   instance = await startServer({
+    discoverVaults: async () => ({
+      vaults: [
+        {
+          name: "Known vault",
+          path: path.join(root, "known-vault"),
+          open: true,
+        },
+      ],
+      message: "",
+    }),
     root,
     port: 0,
     synthesize: async (_, file) =>
@@ -158,13 +173,29 @@ test("source picker imports files, memory, and selected folder notes", async ({
     await page.getByRole("button", { name, exact: false }).click();
   };
   await page.getByRole("button", { name: "Add a source", exact: true }).click();
+  await expect
+    .poll(() =>
+      page
+        .locator(".source-types .brand-logo")
+        .evaluateAll(
+          (images) =>
+            images.length === 4 &&
+            images.every((img) => img.complete && img.naturalWidth > 0),
+        ),
+    )
+    .toBe(true);
   await page.screenshot({ path: testInfo.outputPath("source-picker.png") });
-  await page.getByRole("button", { name: "ChatGPT memory Paste" }).click();
+  await page
+    .getByRole("button", { name: "Conversations & memory ChatGPT" })
+    .click();
+  await page.getByRole("button", { name: "ChatGPT", exact: true }).click();
+  await page.getByLabel("Memory / summary", { exact: true }).check();
+  await page.getByLabel("Title", { exact: true }).fill("ChatGPT memory");
   await expect(
-    page.getByText(/does not connect to your ChatGPT account/),
+    page.getByText(/does not connect to your account/),
   ).toBeVisible();
   await page
-    .getByLabel("Memory", { exact: true })
+    .getByLabel("Memory or summary", { exact: true })
     .fill("I know algebra and prefer diagrams.");
   await page.getByRole("button", { name: "Add to sources" }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
@@ -181,7 +212,7 @@ test("source picker imports files, memory, and selected folder notes", async ({
       "Rate of change",
     ],
     [
-      "Chat export Import",
+      "Conversations & memory ChatGPT",
       "Conversation.JSON",
       JSON.stringify([
         {
@@ -206,7 +237,11 @@ test("source picker imports files, memory, and selected folder notes", async ({
       await (await chooser).setFiles(payload);
     } else {
       await open(mode);
+      await page.getByRole("button", { name: "Claude", exact: true }).click();
       await page.getByLabel("Chat export file").setInputFiles(payload);
+      await expect(page.getByLabel("Conversation text")).toHaveValue(
+        /Explain return values/,
+      );
       await page.getByRole("button", { name: "Add to sources" }).click();
     }
     await expect(page.getByRole("dialog")).toHaveCount(0);
@@ -229,9 +264,13 @@ test("source picker imports files, memory, and selected folder notes", async ({
     "Do not import this note.",
   );
   for (const [mode, label, kind] of [
-    ["Obsidian vault Select", "Vault path", "obsidian"],
+    ["Obsidian Choose", "Vault path", "obsidian"],
   ]) {
     await open(mode);
+    await expect(
+      page.getByLabel("Known note.md", { exact: true }),
+    ).toBeVisible();
+    await page.getByText("Use another vault", { exact: true }).click();
     await page.getByLabel(label).fill(folder);
     await page.getByRole("button", { name: "Preview notes" }).click();
     await page.getByLabel("Selected.md", { exact: true }).check();
@@ -281,11 +320,128 @@ test("source types and back navigation fit a narrow screen", async ({
       () => document.documentElement.scrollWidth <= window.innerWidth,
     ),
   ).toBe(true);
-  await page.getByRole("button", { name: "Obsidian vault Select" }).click();
-  await expect(page.getByLabel("Vault path")).toBeVisible();
+  await page
+    .getByRole("button", { name: "Conversations & memory ChatGPT" })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Gemini", exact: true }),
+  ).toBeVisible();
+  await page.screenshot({
+    path: testInfo.outputPath("chat-services-mobile.png"),
+  });
+  await page.getByRole("button", { name: "Gemini", exact: true }).click();
+  await expect(page.getByLabel("Conversation text")).toBeVisible();
+  await page
+    .getByRole("button", { name: "Chat services", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Source types", exact: true }).click();
+  await page.getByRole("button", { name: "Obsidian Choose" }).click();
+  await expect(page.getByLabel("Known note.md", { exact: true })).toBeVisible();
+  await expect(page.getByLabel("Vault path")).not.toBeVisible();
   await page.getByRole("button", { name: "Source types" }).click();
   await page.getByRole("button", { name: "Paste text" }).click();
   await expect(page.getByLabel("Text", { exact: true })).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
+});
+
+test("chat services show logos and preview the selected provider's exports", async ({
+  page,
+}, testInfo) => {
+  await page.goto(instance.url);
+  await page
+    .getByRole("button", { name: "Sources & notes", exact: true })
+    .click();
+  for (const [provider, name, payload, expected] of [
+    [
+      "chatgpt",
+      "ChatGPT",
+      [
+        {
+          title: "Functions",
+          current_node: "a",
+          mapping: {
+            a: {
+              id: "a",
+              parent: null,
+              message: {
+                author: { role: "user" },
+                content: { parts: ["Explain arguments"] },
+              },
+            },
+          },
+        },
+      ],
+      "Explain arguments",
+    ],
+    [
+      "claude",
+      "Claude",
+      [
+        {
+          name: "Functions",
+          chat_messages: [{ sender: "human", text: "Explain scope" }],
+        },
+      ],
+      "Explain scope",
+    ],
+    [
+      "gemini",
+      "Gemini",
+      [
+        {
+          header: "Gemini Apps",
+          title: "Prompted Explain closures",
+          time: "2026-09-08T12:00:00Z",
+          safeHtmlItem: [
+            {
+              html: "<p>A closure keeps its <strong>environment</strong>.</p><script>bad()</script>",
+            },
+          ],
+        },
+      ],
+      "A closure keeps its environment.",
+    ],
+  ]) {
+    await page
+      .getByRole("button", { name: "Add a source", exact: true })
+      .click();
+    await page
+      .getByRole("button", { name: "Conversations & memory ChatGPT" })
+      .click();
+    const logos = page.locator(".chat-service .brand-logo");
+    await expect(logos).toHaveCount(3);
+    await expect
+      .poll(() =>
+        logos.evaluateAll((images) =>
+          images.every((img) => img.complete && img.naturalWidth > 0),
+        ),
+      )
+      .toBe(true);
+    if (provider === "chatgpt")
+      await page.screenshot({ path: testInfo.outputPath("chat-services.png") });
+    await page.getByRole("button", { name, exact: true }).click();
+    await page.getByLabel("Chat export file").setInputFiles({
+      name: `${provider}.json`,
+      mimeType: "application/json",
+      buffer: Buffer.from(JSON.stringify(payload)),
+    });
+    await expect(page.getByLabel("Conversation text")).toHaveValue(
+      new RegExp(expected.replaceAll(".", "\\.")),
+    );
+    await expect(page.getByLabel("Conversation text")).not.toHaveValue(
+      /bad\(\)/,
+    );
+    // Imported JSON becomes editable plain text, without being parsed a second time.
+    await page
+      .getByLabel("Conversation text")
+      .fill(`${expected}\nMy own context.`);
+    await page.getByRole("button", { name: "Add to sources" }).click();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    const saved = (await instance.library.sources()).find(
+      (source) => source.origin === `${provider}.json`,
+    );
+    expect(saved.provider).toBe(provider);
+    expect(saved.content).toBe(`${expected}\nMy own context.`);
+  }
 });
