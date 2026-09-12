@@ -8,7 +8,22 @@ import { pcmWave } from "../server/speech.js";
 let instance, root;
 test.beforeAll(async () => {
   root = await fs.mkdtemp(path.join(os.tmpdir(), "lesson-ui-"));
+  await fs.mkdir(path.join(root, "known-vault"));
+  await fs.writeFile(
+    path.join(root, "known-vault", "Known note.md"),
+    "Discovered note.",
+  );
   instance = await startServer({
+    discoverVaults: async () => ({
+      vaults: [
+        {
+          name: "Known vault",
+          path: path.join(root, "known-vault"),
+          open: true,
+        },
+      ],
+      message: "",
+    }),
     root,
     port: 0,
     synthesize: async (_, file) =>
@@ -32,9 +47,10 @@ test("notes, learning profile, and provider settings persist through the real AP
     .getByRole("button", { name: "Sources & notes", exact: true })
     .click();
   await page.getByRole("button", { name: "Add a source", exact: true }).click();
+  await page.getByRole("button", { name: "Paste text" }).click();
   await page.getByLabel("Title", { exact: true }).fill("My starting point");
   await page
-    .getByLabel("Your notes or conversation")
+    .getByLabel("Text", { exact: true })
     .fill("I know loops but recursion is unfamiliar.");
   await page.getByRole("button", { name: "Add to sources" }).click();
   await expect(
@@ -141,4 +157,291 @@ test("voice preview uses the selected voice without saving the form", async ({
   );
   await expect(page.getByLabel("Voice preview", { exact: true })).toBeVisible();
   expect((await instance.library.settings()).kokoroVoice).toBe("af_heart");
+});
+
+test("source picker imports files, memory, and selected folder notes", async ({
+  page,
+}, testInfo) => {
+  await page.goto(instance.url);
+  await page
+    .getByRole("button", { name: "Sources & notes", exact: true })
+    .click();
+  const open = async (name) => {
+    await page
+      .getByRole("button", { name: "Add a source", exact: true })
+      .click();
+    await page.getByRole("button", { name, exact: false }).click();
+  };
+  await page.getByRole("button", { name: "Add a source", exact: true }).click();
+  await expect
+    .poll(() =>
+      page
+        .locator(".source-types .brand-logo")
+        .evaluateAll(
+          (images) =>
+            images.length === 4 &&
+            images.every((img) => img.complete && img.naturalWidth > 0),
+        ),
+    )
+    .toBe(true);
+  await page.screenshot({ path: testInfo.outputPath("source-picker.png") });
+  await page
+    .getByRole("button", { name: "Conversations & memory ChatGPT" })
+    .click();
+  await page.getByRole("button", { name: "ChatGPT", exact: true }).click();
+  await page.getByLabel("Memory / summary", { exact: true }).check();
+  await page.getByLabel("Title", { exact: true }).fill("ChatGPT memory");
+  await expect(
+    page.getByText(/does not connect to your account/),
+  ).toBeVisible();
+  await page
+    .getByLabel("Memory or summary", { exact: true })
+    .fill("I know algebra and prefer diagrams.");
+  await page.getByRole("button", { name: "Add to sources" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  const memory = (await instance.library.sources()).find(
+    (s) => s.kind === "memory",
+  );
+  expect(memory.content).toBe("I know algebra and prefer diagrams.");
+
+  for (const [mode, name, contents, expected] of [
+    [
+      "Upload file",
+      "Calculus.md",
+      "# Derivatives\nRate of change",
+      "Rate of change",
+    ],
+    [
+      "Conversations & memory ChatGPT",
+      "Conversation.JSON",
+      JSON.stringify([
+        {
+          name: "Functions",
+          chat_messages: [{ sender: "human", text: "Explain return values" }],
+        },
+      ]),
+      "human: Explain return values",
+    ],
+  ]) {
+    const payload = {
+      name,
+      mimeType: "text/plain",
+      buffer: Buffer.from(contents),
+    };
+    if (mode === "Upload file") {
+      await page
+        .getByRole("button", { name: "Add a source", exact: true })
+        .click();
+      const chooser = page.waitForEvent("filechooser");
+      await page.getByRole("button", { name: mode }).click();
+      await (await chooser).setFiles(payload);
+    } else {
+      await open(mode);
+      await page.getByRole("button", { name: "Claude", exact: true }).click();
+      await page.getByLabel("Chat export file").setInputFiles(payload);
+      await expect(page.getByLabel("Conversation text")).toHaveValue(
+        /Explain return values/,
+      );
+      await page.getByRole("button", { name: "Add to sources" }).click();
+    }
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    const source = (await instance.library.sources()).find(
+      (s) => s.origin === name,
+    );
+    expect(source.content).toContain(expected);
+    expect(source.kind).toBe(mode === "Upload file" ? "file" : "conversation");
+    if (mode === "Upload file") expect(source.title).toBe(name);
+  }
+
+  const folder = path.join(root, "notes-to-import");
+  await fs.mkdir(folder);
+  await fs.writeFile(
+    path.join(folder, "Selected.md"),
+    "Only this note is selected.",
+  );
+  await fs.writeFile(
+    path.join(folder, "Unselected.md"),
+    "Do not import this note.",
+  );
+  for (const [mode, label, kind] of [
+    ["Obsidian Choose", "Vault path", "obsidian"],
+  ]) {
+    await open(mode);
+    await expect(
+      page.getByLabel("Known note.md", { exact: true }),
+    ).toBeVisible();
+    await page.getByText("Use another vault", { exact: true }).click();
+    await page.getByLabel(label).fill(folder);
+    await page.getByRole("button", { name: "Preview notes" }).click();
+    await page.getByLabel("Selected.md", { exact: true }).check();
+    await page.getByRole("button", { name: "Import 1 selected notes" }).click();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    const source = (await instance.library.sources()).find(
+      (s) => s.kind === kind,
+    );
+    expect(source.content).toBe("Only this note is selected.");
+    expect(
+      (await instance.library.sources()).some((s) => s.title === "Unselected"),
+    ).toBe(false);
+  }
+  await fs.writeFile(path.join(folder, "ignored.pdf"), "unsupported");
+  await page.getByRole("button", { name: "Add a source", exact: true }).click();
+  const directoryChooser = page.waitForEvent("filechooser");
+  await page.getByRole("button", { name: "Upload folder" }).click();
+  await (await directoryChooser).setFiles(folder);
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  const uploadedFolder = (await instance.library.sources()).find(
+    (source) => source.kind === "folder",
+  );
+  expect(uploadedFolder.title).toBe("notes-to-import");
+  expect(uploadedFolder.content).toContain("# Selected.md");
+  expect(uploadedFolder.content).toContain("# Unselected.md");
+  expect(uploadedFolder.content).not.toContain("unsupported");
+  expect(await fs.readFile(path.join(folder, "Selected.md"), "utf8")).toBe(
+    "Only this note is selected.",
+  );
+});
+
+test("source types and back navigation fit a narrow screen", async ({
+  page,
+}, testInfo) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(instance.url);
+  await page
+    .getByRole("button", { name: "Sources & notes", exact: true })
+    .click();
+  await page.screenshot({ path: testInfo.outputPath("sources-mobile.png") });
+  await page.getByRole("button", { name: "Add a source", exact: true }).click();
+  await page.screenshot({
+    path: testInfo.outputPath("source-picker-mobile.png"),
+  });
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
+  await page
+    .getByRole("button", { name: "Conversations & memory ChatGPT" })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Gemini", exact: true }),
+  ).toBeVisible();
+  await page.screenshot({
+    path: testInfo.outputPath("chat-services-mobile.png"),
+  });
+  await page.getByRole("button", { name: "Gemini", exact: true }).click();
+  await expect(page.getByLabel("Conversation text")).toBeVisible();
+  await page
+    .getByRole("button", { name: "Chat services", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Source types", exact: true }).click();
+  await page.getByRole("button", { name: "Obsidian Choose" }).click();
+  await expect(page.getByLabel("Known note.md", { exact: true })).toBeVisible();
+  await expect(page.getByLabel("Vault path")).not.toBeVisible();
+  await page.getByRole("button", { name: "Source types" }).click();
+  await page.getByRole("button", { name: "Paste text" }).click();
+  await expect(page.getByLabel("Text", { exact: true })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+});
+
+test("chat services show logos and preview the selected provider's exports", async ({
+  page,
+}, testInfo) => {
+  await page.goto(instance.url);
+  await page
+    .getByRole("button", { name: "Sources & notes", exact: true })
+    .click();
+  for (const [provider, name, payload, expected] of [
+    [
+      "chatgpt",
+      "ChatGPT",
+      [
+        {
+          title: "Functions",
+          current_node: "a",
+          mapping: {
+            a: {
+              id: "a",
+              parent: null,
+              message: {
+                author: { role: "user" },
+                content: { parts: ["Explain arguments"] },
+              },
+            },
+          },
+        },
+      ],
+      "Explain arguments",
+    ],
+    [
+      "claude",
+      "Claude",
+      [
+        {
+          name: "Functions",
+          chat_messages: [{ sender: "human", text: "Explain scope" }],
+        },
+      ],
+      "Explain scope",
+    ],
+    [
+      "gemini",
+      "Gemini",
+      [
+        {
+          header: "Gemini Apps",
+          title: "Prompted Explain closures",
+          time: "2026-09-08T12:00:00Z",
+          safeHtmlItem: [
+            {
+              html: "<p>A closure keeps its <strong>environment</strong>.</p><script>bad()</script>",
+            },
+          ],
+        },
+      ],
+      "A closure keeps its environment.",
+    ],
+  ]) {
+    await page
+      .getByRole("button", { name: "Add a source", exact: true })
+      .click();
+    await page
+      .getByRole("button", { name: "Conversations & memory ChatGPT" })
+      .click();
+    const logos = page.locator(".chat-service .brand-logo");
+    await expect(logos).toHaveCount(3);
+    await expect
+      .poll(() =>
+        logos.evaluateAll((images) =>
+          images.every((img) => img.complete && img.naturalWidth > 0),
+        ),
+      )
+      .toBe(true);
+    if (provider === "chatgpt")
+      await page.screenshot({ path: testInfo.outputPath("chat-services.png") });
+    await page.getByRole("button", { name, exact: true }).click();
+    await page.getByLabel("Chat export file").setInputFiles({
+      name: `${provider}.json`,
+      mimeType: "application/json",
+      buffer: Buffer.from(JSON.stringify(payload)),
+    });
+    await expect(page.getByLabel("Conversation text")).toHaveValue(
+      new RegExp(expected.replaceAll(".", "\\.")),
+    );
+    await expect(page.getByLabel("Conversation text")).not.toHaveValue(
+      /bad\(\)/,
+    );
+    // Imported JSON becomes editable plain text, without being parsed a second time.
+    await page
+      .getByLabel("Conversation text")
+      .fill(`${expected}\nMy own context.`);
+    await page.getByRole("button", { name: "Add to sources" }).click();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    const saved = (await instance.library.sources()).find(
+      (source) => source.origin === `${provider}.json`,
+    );
+    expect(saved.provider).toBe(provider);
+    expect(saved.content).toBe(`${expected}\nMy own context.`);
+  }
 });

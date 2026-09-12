@@ -139,7 +139,13 @@ export class Library {
       .filter(Boolean)
       .sort((a, b) => b.importedAt.localeCompare(a.importedAt));
   }
-  async addSource({ title, content, origin = "Pasted text", kind = "note" }) {
+  async addSource({
+    title,
+    content,
+    origin = "Pasted text",
+    kind = "note",
+    provider,
+  }) {
     if (!title?.trim() || typeof content !== "string" || !content.trim())
       throw new Error("Give your source a title and some text.");
     if (content.length > 150000)
@@ -152,6 +158,7 @@ export class Library {
       content,
       origin,
       kind,
+      ...(provider ? { provider } : {}),
       importedAt: new Date().toISOString(),
     };
     await writeJson(this.sourceFile(source.id), source);

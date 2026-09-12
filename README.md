@@ -9,7 +9,7 @@ A personal video learning app, shaped around what you know and where you get stu
 - A desktop or browser app with a searchable video catalog, thumbnails, progress, and lesson-specific visuals.
 - Narrated MP4 lessons, timestamped transcripts, captions, chapter navigation, and a comprehension question.
 - A tutor beside each video, with saved conversations and clickable timestamp references.
-- A Markdown learner profile, selected Obsidian notes, pasted discussions, and ChatGPT / Claude JSON export imports.
+- A Markdown learner profile, automatically discovered Obsidian vaults, and ChatGPT / Claude / Gemini conversation or memory imports.
 - Codex and Claude Code providers using your installed, signed-in CLIs. No separate model API key required by the app.
 - Local neural narration with Kokoro, six voice choices, speed control, and an audio preview. System speech and Piper remain available.
 - A shared CLI and companion skills so an agent can add lessons using the context of your current conversation.
@@ -44,7 +44,7 @@ The desktop window and terminal use the same library. Keep the checkout in place
 ## Make your first lesson
 
 1. In **Learning profile**, describe your background, goals, uncertainties, and useful explanation preferences.
-2. In **Sources & notes**, paste a discussion, import a text/JSON file, or preview an Obsidian folder and select notes.
+2. In **Sources & notes → Add a source**, use **Upload file** or **Upload folder**, paste text, choose a detected Obsidian vault, or open **Conversations & memory** and select ChatGPT, Claude, or Gemini. [Import instructions and supported formats](docs/source-imports.md).
 3. Select **Create a lesson**, give it a question, describe where you are stuck, and select relevant sources. Leave Presentation on Auto or choose an approach and add visual directions.
 4. Open the finished video to watch, jump through its transcript, reveal the comprehension check, or ask questions.
 
@@ -90,8 +90,8 @@ Creation runs in the background. Add `--wait` to wait for the final result. `--s
 This app does **not** have automatic access to ChatGPT saved memory, all your chats, or Claude account history. There are three explicit ways to bring context in:
 
 - **Current conversation:** the companion skill uses the context available to the calling agent, then saves a brief with the lesson.
-- **Exports or pasted text:** import a relevant ChatGPT or Claude conversation export, Markdown, plain text, or a summary of your saved memory. ChatGPT JSON imports follow the selected conversation branch and omit system messages. Large archives must be reduced to relevant conversations first.
-- **Obsidian:** preview a local vault, select Markdown/text notes, and import copies. Hidden folders and symlinks are skipped. Originals are not edited, and subsequent note changes are not automatically synced.
+- **Conversations & memory:** choose ChatGPT, Claude, or Gemini, then upload an extracted export file or paste a conversation or memory summary. Preview and edit the extracted text before saving. ChatGPT imports follow the active conversation branch and omit system messages. Gemini imports support activity JSON and HTML; they preserve available exchanges without inventing conversation grouping. ZIP archives must be extracted first. These are local copies, not account connections.
+- **Obsidian:** select a vault discovered from Obsidian’s local registry, preview its Markdown/text notes, and import selected copies. A single discovered vault is previewed automatically; manual path entry is available if discovery fails. No MCP server is needed for this local import. Hidden folders and symlinks are skipped. Originals are not edited, and subsequent note changes are not automatically synced.
 
 Imports are reference material. They do not automatically rewrite the learner profile or establish mastery. The app currently uses explicit selection and bounded excerpts, rather than a vector database or background vault indexing. The lesson's **Sources & context** tab shows exactly which excerpts were used, including truncation.
 
