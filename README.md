@@ -177,6 +177,7 @@ The agent chooses and composes capabilities for the lesson; the engine renders t
 - [Continuous SVG animation](docs/animation-engine.md): grouped shapes, measured text and narration-relative motion.
 - [Geographic globes](docs/geography-animation.md): bundled country boundaries, smooth camera rotation/zoom, individual country highlights and markers. This works in ordinary animation plans and is included in the UI planner's capability guidance.
 - [Online image assets](docs/image-assets.md): discover images through the agent/CLI, retain attribution, and mix local raster assets with animation.
+- [Blender 3D rendering](docs/blender-rendering.md): optional trusted-local scenes with materials, lighting and camera control, plus explicit reuse of identical frames.
 - [Scientific animation](docs/scientific-animation.md): optional Matplotlib, NumPy and SymPy scenes through an explicit trusted-local Python command.
 
 Plans can retain cited `sources` (title and URL) in the downloadable transcript. Caption chunks are estimated from narration intervals, not forced word alignments. Generated lessons and personal benchmark artifacts remain outside the repository.

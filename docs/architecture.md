@@ -30,6 +30,8 @@ Existing plans survive rendering failure. Retry captures current speech/provider
 - `server/animation`: validated scene graph, narration-relative tracks and measured text layout.
 - `server/geography`: reusable D3 globe projection, country geometry, highlighting and camera support.
 - `server/assets.js`: bounded image retrieval, local raster normalization and attribution.
+- `server/authored`: shared narration, source snapshots, encoding and publication for executable local renderers.
+- `server/blender`: optional Blender process adapter and deterministic frame host; no subject geometry.
 - `server/scientific`: optional trusted-local mathematical scenes and shared publication workflow.
 - `server/visuals.js`: equations, code, diagrams, and plots from validated content.
 - `server/speech.js`: local neural/system/Piper narration, bounded text chunks, and model caching.

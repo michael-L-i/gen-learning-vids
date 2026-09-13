@@ -33,6 +33,7 @@ const { values, positionals } = parseArgs({
     "visual-brief": { type: "string" },
     plan: { type: "string" },
     python: { type: "string" },
+    blender: { type: "string" },
     help: { type: "boolean" },
   },
 });
@@ -56,6 +57,7 @@ async function main() {
 learnvid serve [--open] [--dev] [--port 4317]
 learnvid create "Topic" [--goal "What to understand"] [--source FILE] [--brief FILE] [--style auto|paper|midnight|sage] [--wait]
 learnvid create "Topic" --plan FILE [--wait]   Render an agent-authored lesson JSON
+learnvid render-blender DIRECTORY [--blender PATH]  Render trusted local 3D scene.py + lesson.json
 learnvid render-scientific DIRECTORY [--python PATH]  Run trusted local scene.py + lesson.json
 learnvid image-search "QUERY"               Find images with source and license metadata
 learnvid image-info "File:COMMONS TITLE"    Resolve one Wikimedia Commons image
@@ -87,6 +89,20 @@ Creation runs in the background unless --wait is provided. Source files are copi
       print(
         await commonsImages(args.join(" "), {
           exact: command === "image-info",
+        }),
+      );
+      break;
+    }
+    case "render-blender": {
+      if (!args[0])
+        throw new Error(
+          "Provide a folder containing lesson.json and trusted scene.py code.",
+        );
+      const { renderBlender } = await import("../server/blender/render.js");
+      print(
+        await renderBlender(library, args[0], {
+          blender: values.blender,
+          progress: (stage) => console.error(stage),
         }),
       );
       break;
