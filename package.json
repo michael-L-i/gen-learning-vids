@@ -59,7 +59,8 @@
       "bin/**",
       "desktop/**",
       "package.json",
-      "benchmarks/**"
+      "benchmarks/**",
+      "package-lock.json"
     ],
     "extraMetadata": {
       "main": "desktop/main.cjs"
