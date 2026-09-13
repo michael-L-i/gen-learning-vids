@@ -1,3 +1,4 @@
+import { assetsSchema } from "./asset-schema.js";
 import { z } from "zod";
 import { animationSchema, validateAnimation } from "./animation/schema.js";
 import { kokoroVoices } from "./speech-options.js";
@@ -182,6 +183,7 @@ export const sceneSchema = z
       });
   });
 export const lessonPlanSchema = z.object({
+  assets: assetsSchema,
   title: z.string().min(1).max(100),
   summary: z.string().min(1).max(400),
   learningObjective: z.string().min(1).max(300),

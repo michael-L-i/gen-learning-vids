@@ -59,7 +59,7 @@ export function frameState(animation, timeline, seconds) {
   return state;
 }
 // Use the same font family for Pango measurement and SVG rasterization.
-export async function prepareAnimation(value) {
+export async function prepareAnimation(value, { assets = {} } = {}) {
   const animation = validateAnimation(value),
     textLayout = {};
   const cache = new Map();
@@ -139,7 +139,19 @@ export async function prepareAnimation(value) {
     if (!Number.isFinite(pathLengths[n.id]) || pathLengths[n.id] > 1000000)
       throw new Error(`Path geometry exceeds limits: ${n.id}`);
   }
-  return { animation, textLayout, pathLengths };
+  const imageData = {};
+  for (const n of animation.nodes.filter((n) => n.type === "image")) {
+    const bytes = assets[n.asset];
+    if (
+      !Buffer.isBuffer(bytes) ||
+      !bytes
+        .subarray(0, 8)
+        .equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))
+    )
+      throw new Error(`Missing normalized image asset: ${n.asset}`);
+    imageData[n.id] = `data:image/png;base64,${bytes.toString("base64")}`;
+  }
+  return { animation, textLayout, pathLengths, imageData };
 }
 export function animationSvg(prepared, timeline, seconds) {
   const { animation, textLayout, pathLengths } = prepared,
@@ -156,6 +168,8 @@ export function animationSvg(prepared, timeline, seconds) {
           body = `<rect width="${n.width}" height="${n.height}" rx="${n.radius}" ${attrs}/>`;
         if (n.type === "ellipse")
           body = `<ellipse rx="${n.width / 2}" ry="${n.height / 2}" ${attrs}/>`;
+        if (n.type === "image")
+          body = `<svg width="${n.width}" height="${n.height}" overflow="hidden"><image width="${n.width}" height="${n.height}" preserveAspectRatio="xMidYMid ${n.fit === "cover" ? "slice" : "meet"}" href="${prepared.imageData[n.id]}"/></svg>`;
         if (n.type === "path")
           body = `<path d="${n.path}" ${attrs} stroke-linecap="round" stroke-linejoin="round" stroke-opacity="${n.draw === 0 ? 0 : 1}" stroke-dasharray="${pathLengths[n.id]} ${pathLengths[n.id]}" stroke-dashoffset="${(1 - n.draw) * pathLengths[n.id]}"/>`;
         if (n.type === "text") {
@@ -264,9 +278,10 @@ export async function renderAnimation({
   settings,
   synthesize,
   cacheDir,
+  assets = {},
   progress = async () => {},
 }) {
-  const prepared = await prepareAnimation(scene.content),
+  const prepared = await prepareAnimation(scene.content, { assets }),
     a = prepared.animation;
   await fs.mkdir(dir, { recursive: true });
   const durations = [];

@@ -19,7 +19,9 @@ export const animationSchema = z.object({
       z.object({
         id: z.string().regex(/^[a-zA-Z0-9_-]{1,40}$/),
         parent: z.string().max(40).nullable().default(null),
-        type: z.enum(["group", "rect", "ellipse", "text", "path"]),
+        type: z.enum(["group", "rect", "ellipse", "text", "path", "image"]),
+        asset: z.string().max(64).default(""),
+        fit: z.enum(["contain", "cover"]).default("contain"),
         x: number.min(-2560).max(2560).default(0),
         y: number.min(-1440).max(1440).default(0),
         width: number.min(0).max(2560).default(0),
@@ -71,6 +73,10 @@ export function validateAnimation(value) {
   if (nodes.size !== a.nodes.length || beats.size !== a.beats.length)
     throw new Error("Animation IDs must be unique.");
   for (const node of a.nodes) {
+    if (node.type === "image" && (!node.asset || !node.width || !node.height))
+      throw new Error(
+        "Image nodes require an asset ID and positive width and height.",
+      );
     const seen = new Set([node.id]);
     let parent = node.parent;
     while (parent) {
@@ -112,3 +118,5 @@ Typography: text nodes support fontFamily:sans|mono, fontWeight:normal|bold, tex
 Beats: {id,narration,seconds}; narration is synthesized per beat, giving real audio boundaries. Scene narration MUST equal beat narrations joined with spaces. Aim for 20–30 spoken words for a 10–15 second clip. seconds is a minimum, never truncate speech.
 Nodes: {id,parent:null or group ID,type:group|rect|ellipse|text|path,x,y,width,height,rotation,scale,opacity,fill,stroke,strokeWidth,radius,text,fontSize,path}. Defaults: x/y/width/height/rotation=0,scale/opacity=1,fill/stroke="none",strokeWidth=2,radius=0,text/path="",fontSize=28. Colors #RRGGBB or none. Parent coordinates are local; a group moves attached shapes/labels together. Rect x/y is top left; ellipse x/y is center and width/height are full diameters. Text x/y is top left, width controls word wrapping, height optional bounds, fontSize>=16. Paths use SVG geometry only, local coordinates. Rotation/scale pivot around node x/y. Use actual objects and spatial relationships, not boxes full of prose. Keep labels short.
 Tracks: {node,property:x|y|rotation|scale|opacity|draw,beat,start,end,from,to,easing:linear|smooth|accelerate|decelerate}. start/end are fractions of that beat, 0<=start<end<=1. Values hold after a track; before the first track use from. No overlapping tracks on a property. draw is path stroke reveal 0–1; use stroke with fill none. Constant acceleration position uses accelerate easing (t squared), not arbitrary easing. Opacity/draw 0–1. At most 100 nodes, 180 tracks, 8 beats. Shapes are schematic, so do not imply anatomical detail or physical accuracy beyond what is actually represented.`;
+
+export const imageGuide = `Optional lesson assets contain id, url (public HTTPS image download), sourceUrl (original source page), title, creator, license, licenseUrl, alt. Use only verified assets supplied in context or discovered by an agent with image-search; never invent image URLs or licensing. Image nodes use type=image, asset=asset ID, width/height, fit=contain|cover. Contain preserves the whole image; cover crops. They support the same grouping and motion tracks as shapes. Use photographs to establish real objects, and diagrams for hidden processes. Choose the balance for the explanation; no fixed photo quota. Review each image before describing it. Distinguish schematics from literal device layouts, and keep source/creator/license credits readable in scenes that show photographs. If no verified assets are available, use diagrams and return assets=[].`;

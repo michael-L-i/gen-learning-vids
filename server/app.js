@@ -194,6 +194,7 @@ export async function createApp(
       const names = [
         "thumbnail.png",
         "transcript.md",
+        "image-credits.md",
         "captions.vtt",
         "storyboard.json",
         "context.json",

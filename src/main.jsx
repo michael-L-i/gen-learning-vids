@@ -825,6 +825,13 @@ function LessonDetail({ id, onBack, onCreate }) {
                   </ul>
                 </>
               )}
+              {lesson.imageAssets?.length > 0 && (
+                <p>
+                  <a href={fileUrl(id, "image-credits.md")} download>
+                    Download image credits
+                  </a>
+                </p>
+              )}
               {lesson.context.sources.map((s) => (
                 <details className="context-source" key={s.id}>
                   <summary>

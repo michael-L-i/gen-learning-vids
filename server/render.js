@@ -1,3 +1,4 @@
+import { prepareAssets, assetCredits } from "./assets.js";
 import fs from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
@@ -77,11 +78,25 @@ export async function renderLesson(
   lesson,
   settings,
   progress = async () => {},
-  { synthesize = speak } = {},
+  { synthesize = speak, fetchImage } = {},
 ) {
   const dir = library.lessonDir(lesson.id);
   const render = path.join(dir, "render");
   await fs.mkdir(render, { recursive: true });
+  const assetDir = path.join(dir, "assets");
+  const imageAssets = await prepareAssets(lesson.assets || [], assetDir, {
+    fetchImage,
+  });
+  const assets = Object.fromEntries(
+    await Promise.all(
+      imageAssets.map(async (a) => [
+        a.id,
+        await fs.readFile(path.join(assetDir, a.file)),
+      ]),
+    ),
+  );
+  const credits = imageAssets.length ? assetCredits(imageAssets) : "";
+  if (credits) await atomicWrite(path.join(dir, "image-credits.md"), credits);
   await sharp(
     Buffer.from(
       sceneSvg(lesson.scenes[0], 0, lesson.scenes.length, lesson.style),
@@ -97,6 +112,7 @@ export async function renderLesson(
       const animationDir = path.join(render, `animation-${i}`);
       const result = await renderAnimation({
         scene,
+        assets,
         dir: animationDir,
         settings,
         synthesize,
@@ -236,11 +252,14 @@ export async function renderLesson(
     `# ${lesson.title}\n\n${lesson.summary}\n\n` +
       scenes
         .map((s) => `## ${clock(s.start)} — ${s.title}\n\n${s.narration}\n`)
-        .join("\n"),
+        .join("\n") +
+      "\n" +
+      credits,
   );
   await fs.rm(render, { recursive: true, force: true });
   return {
     ...lesson,
+    imageAssets,
     scenes,
     duration: start,
     video: `${lesson.id}.mp4`,

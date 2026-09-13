@@ -60,6 +60,15 @@ def main():
     timeline = json.loads(Path(args.timeline).read_text())
     out = Path(args.output)
     out.mkdir(parents=True, exist_ok=True)
+    asset_dir = source.parent / "assets"
+    asset_manifest = asset_dir / "manifest.json"
+    assets = {}
+    if asset_manifest.exists():
+        for asset in json.loads(asset_manifest.read_text())["assets"]:
+            target = (asset_dir / asset["file"]).resolve()
+            if target.parent != asset_dir.resolve() or not target.is_file():
+                raise ValueError("Invalid local image asset")
+            assets[asset["id"]] = {**asset, "path": str(target)}
     reports = []
     if args.scene is not None:
         if not 0 <= args.scene < len(timeline):
@@ -70,7 +79,7 @@ def main():
     for i, beat in enumerate(timeline):
         if args.scene is not None and i != args.scene:
             continue
-        context = {**beat, "width": 1280, "height": 720, "fps": 30}
+        context = {**beat, "width": 1280, "height": 720, "fps": 30, "assets": assets}
         fig, update = module.build_scene(i, context)
         fig.set_size_inches(12.8, 7.2)
         fig.set_dpi(100)

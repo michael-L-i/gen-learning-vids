@@ -87,3 +87,55 @@ test("assets are normalized, retained offline, hashed and credited without repea
     /raster/,
   );
 });
+
+test("image animation embeds local pixels, preserves aspect and rejects unresolved references", async () => {
+  const { prepareAnimation, animationSvg } = await import(
+    "../server/animation/render.js"
+  );
+  const bytes = await sharp({
+    create: { width: 80, height: 40, channels: 3, background: "red" },
+  })
+    .png()
+    .toBuffer();
+  const animation = {
+    kind: "animation",
+    background: "#ffffff",
+    beats: [{ id: "one", narration: "An image", seconds: 1 }],
+    nodes: [
+      {
+        id: "photo",
+        type: "image",
+        asset: "photo",
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100,
+      },
+    ],
+    tracks: [],
+  };
+  await assert.rejects(prepareAnimation(animation), /Missing normalized/);
+  const prepared = await prepareAnimation(animation, {
+    assets: { photo: bytes },
+  });
+  const svg = animationSvg(prepared, [{ id: "one", start: 0, duration: 1 }], 0);
+  assert.match(svg, /data:image\/png;base64/);
+  const { data, info } = await sharp(Buffer.from(svg))
+    .removeAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  const pixel = (x, y) =>
+    Array.from(
+      data.subarray((y * info.width + x) * 3, (y * info.width + x) * 3 + 3),
+    );
+  assert.deepEqual(pixel(50, 10), [255, 255, 255]);
+  assert.deepEqual(pixel(50, 50), [255, 0, 0]);
+  animation.nodes[0].fit = "cover";
+  const covered = await prepareAnimation(animation, {
+    assets: { photo: bytes },
+  });
+  assert.match(
+    animationSvg(covered, [{ id: "one", start: 0, duration: 1 }], 0),
+    /xMidYMid slice/,
+  );
+});

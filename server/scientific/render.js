@@ -1,3 +1,5 @@
+import { assetsSchema } from "../asset-schema.js";
+import { prepareAssets, assetCredits } from "../assets.js";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -9,6 +11,8 @@ import { atomicWrite, writeJson } from "../store.js";
 import { captions, clock } from "../render.js";
 
 export const scientificManifest = z.object({
+  assets: assetsSchema,
+  brief: z.string().max(10000).default(""),
   title: z.string().min(1).max(100),
   summary: z.string().min(1).max(600),
   learningObjective: z.string().min(1).max(500),
@@ -54,7 +58,12 @@ export async function probeVideo(file) {
 export async function renderScientific(
   library,
   sourceDir,
-  { python = "python3", synthesize = speak, progress = console.log } = {},
+  {
+    python = "python3",
+    synthesize = speak,
+    progress = console.log,
+    fetchImage,
+  } = {},
 ) {
   if (python.includes("/") || python.includes("\\"))
     python = path.resolve(python);
@@ -93,8 +102,8 @@ export async function renderScientific(
     settings,
     request: { topic: manifest.title, sourceIds: [] },
     context: {
-      profile: "",
-      brief: manifest.learningObjective,
+      profile: await library.profile(),
+      brief: manifest.brief || manifest.learningObjective,
       sources: manifest.sources.map((s, i) => ({
         id: `reference-${i}`,
         title: s.title,
@@ -111,6 +120,14 @@ export async function renderScientific(
   };
   await update({});
   try {
+    const imageAssets = await prepareAssets(
+      manifest.assets,
+      path.join(work, "source", "assets"),
+      { fetchImage },
+    );
+    const credits = imageAssets.length ? assetCredits(imageAssets) : "";
+    if (credits) await atomicWrite(path.join(dir, "image-credits.md"), credits);
+    await update({ imageAssets });
     let start = 0;
     const timeline = [];
     for (let i = 0; i < manifest.scenes.length; i++) {
@@ -235,7 +252,9 @@ export async function renderScientific(
           .map((s) => `## ${clock(s.start)} — ${s.title}\n\n${s.narration}\n`)
           .join("\n") +
         "\nSources:\n" +
-        manifest.sources.map((s) => `- [${s.title}](${s.url})`).join("\n"),
+        manifest.sources.map((s) => `- [${s.title}](${s.url})`).join("\n") +
+        "\n\n" +
+        credits,
     );
     await fs.rename(video, path.join(library.root, "videos", `${id}.mp4`));
     await update({

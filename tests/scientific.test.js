@@ -1,3 +1,4 @@
+import sharp from "sharp";
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
@@ -60,6 +61,18 @@ test("scientific route renders real media, retains source and publishes timed le
     assumedKnowledge: [],
     tags: ["Physics"],
     sources: [],
+    assets: [
+      {
+        id: "sample",
+        url: "https://example.com/image.png",
+        sourceUrl: "https://example.com/source",
+        title: "Sample",
+        creator: "Test",
+        license: "CC0",
+        licenseUrl: "https://creativecommons.org/publicdomain/zero/1.0/",
+        alt: "Red rectangle",
+      },
+    ],
     check: { question: "Does x increase?", answer: "Yes" },
     scenes: [
       { title: "First", narration: "First narration", seconds: 1 },
@@ -76,16 +89,32 @@ test("scientific route renders real media, retains source and publishes timed le
   );
   await fs.writeFile(
     path.join(source, "scene.py"),
-    `import matplotlib.pyplot as plt\ndef build_scene(index, ctx):\n fig,ax=plt.subplots()\n ax.set_xlim(0,1); ax.set_ylim(0,1)\n dot,=ax.plot([],[], 'o')\n def update(t): dot.set_data([t/ctx['duration']],[.5])\n return fig, update\n`,
+    `import matplotlib.pyplot as plt\ndef build_scene(index, ctx):\n fig,ax=plt.subplots()\n from media import place_image\n photo,artist=place_image(fig,ctx,"sample",[.1,.7,.2,.2])\n assert ctx["assets"]["sample"]["license"] == "CC0"\n ax.set_xlim(0,1); ax.set_ylim(0,1)\n dot,=ax.plot([],[], 'o')\n def update(t): dot.set_data([t/ctx['duration']],[.5])\n return fig, update\n`,
   );
   const library = await new Library(path.join(dir, "library")).init();
   const result = await renderScientific(library, source, {
     python,
     progress: () => {},
+    fetchImage: async () => ({
+      bytes: await sharp({
+        create: { width: 80, height: 40, channels: 3, background: "red" },
+      })
+        .png()
+        .toBuffer(),
+      url: "https://example.com/image.png",
+    }),
     synthesize: async (_, file) =>
       fs.writeFile(file, pcmWave(new Float32Array(12000))),
   });
   assert.equal(result.status, "ready");
+  assert.equal(result.imageAssets[0].width, 80);
+  assert.match(
+    await fs.readFile(
+      path.join(library.lessonDir(result.id), "image-credits.md"),
+      "utf8",
+    ),
+    /CC0/,
+  );
   assert.equal(result.scenes[1].start, result.scenes[0].duration);
   assert.equal((await library.lesson(result.id)).renderer, "matplotlib");
   const media = await probeVideo(
