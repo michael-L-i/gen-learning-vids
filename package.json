@@ -59,8 +59,7 @@
       "bin/**",
       "desktop/**",
       "package.json",
-      "benchmarks/**",
-      "package-lock.json"
+      "benchmarks/**"
     ],
     "extraMetadata": {
       "main": "desktop/main.cjs"
@@ -77,6 +76,12 @@
       "node_modules/onnxruntime-node/**",
       "node_modules/phonemizer/**",
       "node_modules/kokoro-js/voices/**"
+    ],
+    "extraResources": [
+      {
+        "from": "package-lock.json",
+        "to": "benchmark-package-lock.json"
+      }
     ]
   },
   "author": "Lesson Library contributors",

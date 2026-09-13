@@ -97,7 +97,16 @@ async function snapshotEngine(dir) {
       const name = path.join(relative, entry.name);
       if (entry.isDirectory()) await copy(name);
       else if (entry.name.endsWith(".js")) {
-        const bytes = await fs.readFile(path.join(repository, name));
+        const bytes = await fs
+          .readFile(path.join(repository, name))
+          .catch((error) => {
+            if (name !== "package-lock.json" || error.code !== "ENOENT")
+              throw error;
+            // electron-builder excludes lockfiles from ASAR; package this as an extra resource.
+            return fs.readFile(
+              path.join(repository, "..", "benchmark-package-lock.json"),
+            );
+          });
         hash.update(name).update(bytes);
         await atomicWrite(path.join(dir, "engine-source", name), bytes);
       }
@@ -105,7 +114,16 @@ async function snapshotEngine(dir) {
   }
   await copy("server");
   for (const name of ["package.json", "package-lock.json"]) {
-    const bytes = await fs.readFile(path.join(repository, name));
+    const bytes = await fs
+      .readFile(path.join(repository, name))
+      .catch((error) => {
+        if (name !== "package-lock.json" || error.code !== "ENOENT")
+          throw error;
+        // electron-builder excludes lockfiles from ASAR; package this as an extra resource.
+        return fs.readFile(
+          path.join(repository, "..", "benchmark-package-lock.json"),
+        );
+      });
     hash.update(name).update(bytes);
     await atomicWrite(path.join(dir, "engine-source", name), bytes);
   }
