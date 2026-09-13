@@ -56,6 +56,9 @@ export default function Benchmarks({ api, post }) {
   }, []);
   const current = runs.find((r) => r.id === runId),
     comparison = runs.find((r) => r.id === compareId);
+  useEffect(() => {
+    if (mode === "replay") setSelected(current?.cases.map((c) => c.id) || []);
+  }, [mode, current?.id]);
   const currentCase = current?.cases.find((c) => c.id === key),
     comparisonCase = comparison?.cases.find((c) => c.id === key);
   const definition = currentCase?.definition || cases.find((c) => c.id === key);
@@ -142,6 +145,10 @@ export default function Benchmarks({ api, post }) {
               <input
                 type="checkbox"
                 checked={selected.includes(c.id)}
+                disabled={
+                  mode === "replay" &&
+                  !current?.cases.some((item) => item.id === c.id)
+                }
                 onChange={(e) =>
                   setSelected((old) =>
                     e.target.checked
@@ -395,7 +402,10 @@ function Review({ run, item, comparison, post, refresh }) {
         {
           ...value,
           comparedWith: comparison?.id || null,
-          preference: comparison ? value.preference : "none",
+          preference:
+            comparison && value.comparedWith === comparison.id
+              ? value.preference
+              : "none",
         },
         "PUT",
       );
@@ -472,9 +482,15 @@ function Review({ run, item, comparison, post, refresh }) {
             Preferred clip
             <select
               aria-label="Preferred clip"
-              value={value.preference}
+              value={
+                value.comparedWith === comparison.id ? value.preference : "none"
+              }
               onChange={(e) =>
-                setValue({ ...value, preference: e.target.value })
+                setValue({
+                  ...value,
+                  preference: e.target.value,
+                  comparedWith: comparison.id,
+                })
               }
             >
               <option value="none">Not compared</option>

@@ -514,6 +514,14 @@ test("benchmark viewer compares runs and persists timestamped review", async ({
     "At 0.5s keep the arrow attached.",
   );
   await expect(page.getByLabel("motion score")).toHaveValue("4");
+  await page.getByText("New run", { exact: true }).click();
+  await page.getByLabel("Run type", { exact: true }).selectOption("replay");
+  await expect(
+    page.getByRole("checkbox", { name: "Physics", exact: true }),
+  ).toBeChecked();
+  await expect(
+    page.getByRole("checkbox", { name: "Biology", exact: true }),
+  ).toBeDisabled();
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(
     page.getByRole("heading", { name: "Benchmarks", exact: true }),
