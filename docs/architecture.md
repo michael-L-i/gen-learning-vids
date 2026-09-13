@@ -32,7 +32,11 @@ Existing plans survive rendering failure. Retry captures current speech/provider
 - `server/assets.js`: bounded image retrieval, local raster normalization and attribution.
 - `server/authored`: shared narration, source snapshots, encoding and publication for executable local renderers.
 - `server/blender`: optional Blender process adapter and deterministic frame host; no subject geometry.
-- `server/scientific`: optional trusted-local mathematical scenes and shared publication workflow.
+- `server/authored`: shared narration, source snapshots, timing, encoding and publication for trusted authored scenes.
+- `server/browser`: managed Chromium capture of SVG/DOM, Anime.js and Three.js scenes; RDKit.js supplies molecular diagrams.
+- `server/capabilities.js`: agent-readable visual capabilities and optional external-tool enablement.
+- `server/blender`: explicitly enabled external 3D rendering.
+- `server/scientific`: optional trusted-local mathematical scenes through a separately installed Python environment.
 - `server/visuals.js`: equations, code, diagrams, and plots from validated content.
 - `server/speech.js`: local neural/system/Piper narration, bounded text chunks, and model caching.
 - `server/engine.js`: creation, jobs, retries, and saved Q&A.
@@ -58,3 +62,7 @@ Avoid making direct ChatGPT memory access a prerequisite: it is neither implemen
 Kokoro loads lazily, so starting the UI does not download models or allocate an inference session. Its quantized ONNX model is cached inside the library. The six bundled voice presets are selected independently of legacy system voice names. Requests reuse a loaded model within a process and serialize inference against that session. Long narration is split before phonemization to avoid silent input truncation.
 
 Voice previews are generated from unsaved settings, cached by configuration, and atomically published as WAV files. They share the same speech engine as video jobs. Tests inject a small audio fixture so CI verifies preview behavior without contacting a model service or downloading weights. A separate real local run verified cached generation with network requests disabled.
+
+## Agent-selected rendering capabilities
+
+The installed lesson skill exposes `learnvid capabilities` and the authored browser contract. The calling coding agent chooses capabilities and authors scene code; the ordinary HTTP planner still produces validated JSON only. Browser libraries install with npm and managed Chromium downloads on first use. FFmpeg remains a separately required encoder in the current checkout workflow. Blender defaults to disabled and its renderer enforces the per-library setting even when an executable is supplied. These are engine capabilities within the existing Lesson Library plugin, not separately published marketplaces.
