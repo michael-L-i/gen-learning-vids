@@ -1,3 +1,4 @@
+import { globeSvg } from "../geography/globe.js";
 import fs from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
@@ -6,7 +7,7 @@ import { validateAnimation } from "./schema.js";
 import { escapeXml } from "../visual-utils.js";
 import { run } from "../process.js";
 import { atomicWrite, writeJson } from "../store.js";
-export const animationEngineVersion = "svg-timeline-3";
+export const animationEngineVersion = "svg-timeline-4";
 export const fps = 30;
 const ease = (t, kind) =>
   kind === "accelerate"
@@ -163,6 +164,15 @@ export function animationSvg(prepared, timeline, seconds) {
         const n = state.get(raw.id),
           attrs = `fill="${n.fill}" stroke="${n.stroke}" stroke-width="${n.strokeWidth}"`;
         let body = "";
+        if (n.type === "globe")
+          body = globeSvg({
+            ...n,
+            ...n.geography,
+            highlights: n.geography.highlights.map((h) => ({
+              ...h,
+              opacity: n[`highlight:${h.country}`] ?? 1,
+            })),
+          });
         if (n.type === "group") body = render(n.id);
         if (n.type === "rect")
           body = `<rect width="${n.width}" height="${n.height}" rx="${n.radius}" ${attrs}/>`;
