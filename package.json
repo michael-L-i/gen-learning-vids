@@ -55,6 +55,7 @@
     "files": [
       "dist/**",
       "server/**",
+      "!**/__pycache__/**",
       "bin/**",
       "desktop/**",
       "package.json"

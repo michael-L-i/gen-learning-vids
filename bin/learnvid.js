@@ -32,6 +32,7 @@ const { values, positionals } = parseArgs({
     presentation: { type: "string" },
     "visual-brief": { type: "string" },
     plan: { type: "string" },
+    python: { type: "string" },
     help: { type: "boolean" },
   },
 });
@@ -55,6 +56,7 @@ async function main() {
 learnvid serve [--open] [--dev] [--port 4317]
 learnvid create "Topic" [--goal "What to understand"] [--source FILE] [--brief FILE] [--style auto|paper|midnight|sage] [--wait]
 learnvid create "Topic" --plan FILE [--wait]   Render an agent-authored lesson JSON
+learnvid render-scientific DIRECTORY [--python PATH]  Run trusted local scene.py + lesson.json
 learnvid create "Topic" --presentation auto|worked|diagram|code|slides --visual-brief "Visual directions"
 learnvid list
 learnvid show ID
@@ -77,6 +79,22 @@ Creation runs in the background unless --wait is provided. Source files are copi
   }
   const library = await new Library(values.library).init();
   switch (command) {
+    case "render-scientific": {
+      if (!args[0])
+        throw new Error(
+          "Provide a folder containing lesson.json and trusted scene.py code.",
+        );
+      const { renderScientific } = await import(
+        "../server/scientific/render.js"
+      );
+      print(
+        await renderScientific(library, args[0], {
+          python: values.python,
+          progress: (stage) => console.error(stage),
+        }),
+      );
+      break;
+    }
     case "serve": {
       const { startServer } = await import("../server/app.js");
       const instance = await startServer({

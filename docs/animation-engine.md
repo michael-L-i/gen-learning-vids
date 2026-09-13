@@ -4,6 +4,10 @@ The lesson renderer accepts `visual: "animation"` scenes using the contract in `
 
 Scenes contain shapes, measured text, parent groups, timed narration beats, and tracks for position, rotation, scale, opacity and stroke drawing. The renderer synthesizes each beat, extends its duration to fit the speech, and evaluates actual frames at 720p/30 fps. Caption cues follow real beat boundaries. Existing lesson formats can appear alongside animation scenes.
 
+Text boxes support horizontal and vertical alignment, padding, weight, line spacing and monospace code. Layout checks include sampled overlaps between visible text, accounting for parent opacity. The planner receives guidance for shared label edges, code highlights and staggered timeline annotations.
+
+For more complex numerical motion and linked graphs, agents can explicitly select the optional [scientific animation route](scientific-animation.md). It accepts authored Python scenes using Matplotlib while retaining the same catalog, narration, transcript and video outputs.
+
 The engine validates IDs, hierarchy, track conflicts and values; measures text; checks sampled text clipping; and retains timing and layout reports. It does not establish scientific correctness, prevent every object collision, or automatically generate anatomical illustrations. These require further capabilities and human review.
 
 This branch contains only the distributable engine, integration and regression tests. Personal evaluation prompts, viewers, ratings and generated comparison clips belong to a separate local branch/worktree. Merge engine changes into main; do not merge the personal evaluation branch.

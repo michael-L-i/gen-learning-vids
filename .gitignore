@@ -16,3 +16,4 @@ library/
 *.aiff
 *.wav
 *.dmg
+__pycache__/
