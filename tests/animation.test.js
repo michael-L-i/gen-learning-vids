@@ -74,6 +74,68 @@ test("text layout measures overflow", async () => {
     ),
   );
 });
+test("text boxes align using measured padding; code and hidden parent labels keep correct bounds", async () => {
+  const a = {
+    kind: "animation",
+    background: "#FFFFFF",
+    beats: [{ id: "b", narration: "Aligned text", seconds: 1 }],
+    tracks: [],
+    nodes: [
+      {
+        id: "label",
+        type: "text",
+        x: 100,
+        y: 100,
+        width: 300,
+        height: 100,
+        padding: 20,
+        textAlign: "center",
+        verticalAlign: "middle",
+        text: "Centered",
+        fontSize: 24,
+      },
+      {
+        id: "code",
+        type: "text",
+        x: 100,
+        y: 300,
+        width: 500,
+        height: 100,
+        padding: 16,
+        fontFamily: "mono",
+        text: "def f(n):\n    return n + 1",
+        fontSize: 24,
+      },
+      { id: "hidden", type: "group", opacity: 0 },
+      {
+        id: "hidden-label",
+        parent: "hidden",
+        type: "text",
+        x: 1250,
+        text: "Outside but hidden",
+      },
+    ],
+  };
+  const p = await prepareAnimation(a),
+    l = p.textLayout.label;
+  assert.ok(Math.abs(l.offsets[0] + l.widths[0] / 2 - 150) < 0.01);
+  assert.equal(l.top + l.height / 2, 50);
+  assert.equal(p.textLayout.code.lines[1], "    return n + 1");
+  assert.deepEqual(inspectAnimation(p, beatTimeline(a)).warnings, []);
+  a.nodes.push({
+    id: "collision",
+    type: "text",
+    x: 100,
+    y: 300,
+    text: "Overlapping text",
+  });
+  const collision = await prepareAnimation(a);
+  assert.ok(
+    inspectAnimation(collision, beatTimeline(a)).warnings.some((w) =>
+      w.issue.includes("overlaps"),
+    ),
+  );
+});
 test("rendered path reveal grows spatially, and code indentation survives text layout", async () => {
   const sharp = (await import("sharp")).default;
   const a = {

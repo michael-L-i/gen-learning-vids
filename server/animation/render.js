@@ -6,7 +6,7 @@ import { validateAnimation } from "./schema.js";
 import { escapeXml } from "../visual-utils.js";
 import { run } from "../process.js";
 import { atomicWrite, writeJson } from "../store.js";
-export const animationEngineVersion = "svg-timeline-2";
+export const animationEngineVersion = "svg-timeline-3";
 export const fps = 30;
 const ease = (t, kind) =>
   kind === "accelerate"
@@ -63,15 +63,16 @@ export async function prepareAnimation(value) {
   const animation = validateAnimation(value),
     textLayout = {};
   const cache = new Map();
-  const measure = async (text, size) => {
-    const key = `${size}:${text}`;
+  const measure = async (text, n) => {
+    const font = `${n.fontFamily === "mono" ? "Courier New" : "Arial"} ${n.fontWeight === "bold" ? "Bold " : ""}${n.fontSize}`;
+    const key = `${font}:${text}`;
     if (!cache.has(key))
       cache.set(
         key,
         sharp({
           text: {
             text: escapeXml(text) || " ",
-            font: `Arial ${size}`,
+            font,
             dpi: 72,
           },
         })
@@ -82,17 +83,22 @@ export async function prepareAnimation(value) {
   };
   for (const n of animation.nodes.filter((n) => n.type === "text")) {
     const lines = [];
+    // Sentinels preserve leading/trailing whitespace in Pango's ink-bounds measurement.
+    const widthOf = async (s) =>
+      (await measure(`|${s}|`, n)) - (await measure("||", n));
+    const innerWidth = Math.max(0, (n.width || 1184) - 2 * n.padding);
     let current = "";
     for (const paragraph of n.text.split("\n")) {
+      if (n.fontFamily === "mono") {
+        lines.push(paragraph.replace(/\t/g, "    "));
+        continue;
+      }
       current = paragraph.match(/^\s*/)[0];
       for (const word of paragraph.split(/\s+/).filter(Boolean)) {
         const candidate = current.trim()
           ? `${current} ${word}`
           : `${current}${word}`;
-        if (
-          current &&
-          (await measure(candidate, n.fontSize)) > (n.width || 1184)
-        ) {
+        if (current && (await widthOf(candidate)) > innerWidth) {
           lines.push(current);
           current = word;
         } else current = candidate;
@@ -100,13 +106,27 @@ export async function prepareAnimation(value) {
       lines.push(current);
       current = "";
     }
+    const widths = await Promise.all(lines.map(widthOf));
+    const height = lines.length * n.fontSize * n.lineHeight;
+    const spareY = Math.max(
+      0,
+      (n.height || height + 2 * n.padding) - 2 * n.padding - height,
+    );
+    const top =
+      n.padding + spareY * { top: 0, middle: 0.5, bottom: 1 }[n.verticalAlign];
+    const offsets = widths.map(
+      (w) =>
+        n.padding +
+        Math.max(0, innerWidth - w) *
+          { left: 0, center: 0.5, right: 1 }[n.textAlign],
+    );
     textLayout[n.id] = {
       lines,
-      width: Math.max(
-        0,
-        ...(await Promise.all(lines.map((l) => measure(l, n.fontSize)))),
-      ),
-      height: lines.length * n.fontSize * 1.25,
+      widths,
+      offsets,
+      top,
+      width: Math.max(0, ...widths),
+      height,
     };
   }
   const pathLengths = {};
@@ -138,8 +158,10 @@ export function animationSvg(prepared, timeline, seconds) {
           body = `<ellipse rx="${n.width / 2}" ry="${n.height / 2}" ${attrs}/>`;
         if (n.type === "path")
           body = `<path d="${n.path}" ${attrs} stroke-linecap="round" stroke-linejoin="round" stroke-opacity="${n.draw === 0 ? 0 : 1}" stroke-dasharray="${pathLengths[n.id]} ${pathLengths[n.id]}" stroke-dashoffset="${(1 - n.draw) * pathLengths[n.id]}"/>`;
-        if (n.type === "text")
-          body = `<text xml:space="preserve" font-family="Arial" font-size="${n.fontSize}" ${attrs}>${textLayout[n.id].lines.map((l, i) => `<tspan x="0" y="${n.fontSize + i * n.fontSize * 1.25}">${escapeXml(l)}</tspan>`).join("")}</text>`;
+        if (n.type === "text") {
+          const l = textLayout[n.id];
+          body = `<text xml:space="preserve" font-family="${n.fontFamily === "mono" ? "Courier New" : "Arial"}" font-weight="${n.fontWeight}" font-size="${n.fontSize}" ${attrs}>${l.lines.map((line, i) => `<tspan x="${l.offsets[i]}" y="${l.top + n.fontSize + i * n.fontSize * n.lineHeight}">${escapeXml(line)}</tspan>`).join("")}</text>`;
+        }
         return `<g transform="translate(${n.x} ${n.y}) rotate(${n.rotation}) scale(${n.scale})" opacity="${n.opacity}">${body}</g>`;
       })
       .join("");
@@ -149,23 +171,33 @@ export function inspectAnimation(prepared, timeline) {
   const warnings = [];
   for (const n of prepared.animation.nodes.filter((n) => n.type === "text")) {
     const l = prepared.textLayout[n.id];
-    if (n.width && l.width > n.width + 3)
+    if (n.width && l.width + n.padding * 2 > n.width + 3)
       warnings.push({ node: n.id, issue: "Text exceeds its width" });
-    if (n.height && l.height > n.height + 3)
+    if (n.height && l.height + n.padding * 2 > n.height + 3)
       warnings.push({ node: n.id, issue: "Text exceeds its height" });
   }
   // Sample transformed text corners, including inherited group transforms.
   const total = timeline.at(-1).start + timeline.at(-1).duration;
   for (let t = 0; t <= total; t += 0.25) {
     const states = frameState(prepared.animation, timeline, t);
+    const boxes = [];
     for (const n of states.values()) {
       if (n.type !== "text" || n.opacity < 0.1) continue;
+      let opacity = n.opacity,
+        parent = states.get(n.parent);
+      while (parent) {
+        opacity *= parent.opacity;
+        parent = states.get(parent.parent);
+      }
+      if (opacity < 0.1) continue;
       const l = prepared.textLayout[n.id];
+      const left = Math.min(...l.offsets),
+        right = Math.max(...l.offsets.map((x, i) => x + l.widths[i]));
       const corners = [
-        [0, 0],
-        [l.width, 0],
-        [0, l.height],
-        [l.width, l.height],
+        [left, l.top],
+        [right, l.top],
+        [left, l.top + l.height],
+        [right, l.top + l.height],
       ].map(([x, y]) => {
         let p = n;
         while (p) {
@@ -178,6 +210,29 @@ export function inspectAnimation(prepared, timeline) {
         }
         return [x, y];
       });
+      const box = {
+        id: n.id,
+        left: Math.min(...corners.map((p) => p[0])),
+        right: Math.max(...corners.map((p) => p[0])),
+        top: Math.min(...corners.map((p) => p[1])),
+        bottom: Math.max(...corners.map((p) => p[1])),
+      };
+      for (const other of boxes) {
+        if (
+          Math.min(box.right, other.right) - Math.max(box.left, other.left) >
+            4 &&
+          Math.min(box.bottom, other.bottom) - Math.max(box.top, other.top) >
+            4 &&
+          !warnings.some((w) => w.node === n.id && w.other === other.id)
+        )
+          warnings.push({
+            node: n.id,
+            other: other.id,
+            seconds: t,
+            issue: "Text overlaps text (sampled bounds)",
+          });
+      }
+      boxes.push(box);
       if (
         corners.some(([x, y]) => x < 0 || y < 0 || x > 1280 || y > 720) &&
         !warnings.some(
@@ -194,6 +249,7 @@ export function inspectAnimation(prepared, timeline) {
       "non-overlapping property tracks",
       "measured text bounds",
       "sampled text clipping",
+      "sampled visible text overlaps",
     ],
     warnings,
     limitations: [
