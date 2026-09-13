@@ -26,7 +26,11 @@ Existing plans survive rendering failure. Retry captures current speech/provider
 - `server/store.js`: directory layout, atomic files, locks, configuration.
 - `server/imports.js`: selective Markdown imports and chat-export normalization.
 - `server/providers.js`: headless Codex/Claude adapters and instructional prompts.
-- `server/render.js`: timed visual sequences, media encoding, transcripts.
+- `server/render.js`: timed visual sequences, media encoding, transcripts and citations.
+- `server/animation`: validated scene graph, narration-relative tracks and measured text layout.
+- `server/geography`: reusable D3 globe projection, country geometry, highlighting and camera support.
+- `server/assets.js`: bounded image retrieval, local raster normalization and attribution.
+- `server/scientific`: optional trusted-local mathematical scenes and shared publication workflow.
 - `server/visuals.js`: equations, code, diagrams, and plots from validated content.
 - `server/speech.js`: local neural/system/Piper narration, bounded text chunks, and model caching.
 - `server/engine.js`: creation, jobs, retries, and saved Q&A.

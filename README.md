@@ -154,7 +154,7 @@ See [architecture and next steps](docs/architecture.md) for extension points. MI
 
 Presentation preferences are **Auto**, **Worked example**, **Visual explanation**, **Code walkthrough**, and **Slides**. They guide the agent's choices rather than lock every chapter into one template. Physics can combine a force diagram, algebra, and a graph; biology can use structures and labeled processes; coding can show actual code, highlighted lines, and traced output.
 
-Equations use MathJax SVG, diagrams use positioned nodes and directional links, and plots use explicit coordinate data. Progressive equation steps, diagram nodes, process steps, and code highlights are evenly spaced across chapter audio. Reveals are not word-aligned. Code is never executed. These are structured explanatory graphics, not arbitrary animations or realistic illustrations. Existing lesson JSON remains compatible.
+Equations use MathJax SVG, diagrams use positioned nodes and directional links, and plots use explicit coordinate data. Progressive equation steps, diagram nodes, process steps, and code highlights are evenly spaced across chapter audio. Reveals are not word-aligned. Code walkthrough content is displayed without execution. These structured formats remain compatible with existing lesson JSON; continuous animation and optional authored scientific scenes are described below.
 
 ```sh
 learnvid create "Projectile motion" --presentation auto --visual-brief "Use a diagram, then derive the equations and compare trajectories"
@@ -169,3 +169,14 @@ Kokoro uses the [official Kokoro.js implementation](https://github.com/hexgrad/k
 learnvid voices
 learnvid speech-preview --output /tmp/voice-preview.wav
 ```
+
+## Animation modules
+
+The agent chooses and composes capabilities for the lesson; the engine renders them with shared narration and library storage.
+
+- [Continuous SVG animation](docs/animation-engine.md): grouped shapes, measured text and narration-relative motion.
+- [Geographic globes](docs/geography-animation.md): bundled country boundaries, smooth camera rotation/zoom, individual country highlights and markers. This works in ordinary animation plans and is included in the UI planner's capability guidance.
+- [Online image assets](docs/image-assets.md): discover images through the agent/CLI, retain attribution, and mix local raster assets with animation.
+- [Scientific animation](docs/scientific-animation.md): optional Matplotlib, NumPy and SymPy scenes through an explicit trusted-local Python command.
+
+Plans can retain cited `sources` (title and URL) in the downloadable transcript. Caption chunks are estimated from narration intervals, not forced word alignments. Generated lessons and personal benchmark artifacts remain outside the repository.
