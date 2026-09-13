@@ -141,12 +141,23 @@ export async function renderScientific(
       if (!Number.isFinite(seconds) || seconds <= 0)
         throw new Error("Empty narration");
       const duration = Math.ceil(Math.max(s.seconds, seconds + 0.6) * 30) / 30;
+      const words = s.narration.split(/\s+/);
+      const cues = [];
+      for (let word = 0; word < words.length; word += 11) {
+        const end = Math.min(word + 11, words.length);
+        cues.push({
+          start: (seconds * word) / words.length,
+          duration: (seconds * (end - word)) / words.length,
+          narration: words.slice(word, end).join(" "),
+        });
+      }
       timeline.push({
         ...s,
         takeaway: s.takeaway || s.title,
         start,
         duration,
-        cues: [{ start: 0, duration: seconds, narration: s.narration }],
+        cues,
+        captionTiming: "estimated from narration duration",
       });
       start += duration;
     }

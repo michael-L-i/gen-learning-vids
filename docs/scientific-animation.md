@@ -4,7 +4,7 @@ Use the SVG timeline for simple explanatory shapes. Use the optional Matplotlib 
 
 An agent authors `lesson.json` and `scene.py` in a private working folder. The scene module can use Matplotlib, NumPy and SymPy freely. It is not restricted to predefined diagrams or subject templates. `build_scene(index, context)` returns a Matplotlib figure and a deterministic `update(seconds)` callback. Context includes the chapter's actual speech-adjusted `duration`, width 1280, height 720 and fps 30. Repeated or out-of-order calls to update must produce the same frame.
 
-The host owns narration timing, frame encoding, preview images, sampled text bounds checks, transcripts, captions and publication to the normal Lesson Library catalog. Authored source, the manifest, source hash, timeline and validation reports are retained beside the lesson outside Git. Caption intervals use actual speech lengths; the final pause is not captioned. Render errors produce an error record rather than a ready video.
+The host owns narration timing, frame encoding, preview images, sampled text bounds checks, transcripts, captions and publication to the normal Lesson Library catalog. Authored source, the manifest, source hash, timeline and validation reports are retained beside the lesson outside Git. Captions use short chunks with estimated boundaries proportional to the actual speech duration; these are not forced word alignments. The final pause is not captioned. Render errors produce an error record rather than a ready video.
 
 ## Setup and invocation
 
@@ -16,7 +16,7 @@ node bin/learnvid.js render-scientific /path/to/authored-lesson --python .local/
 
 The explicit command executes trusted local Python code with your normal local process permissions. This is not exposed as an executable-code field on the web API. The environment is optional and is not bundled into the desktop app. No global Python packages or account configuration are modified.
 
-The manifest contract is `scientificManifest` in `server/scientific/render.js`: title, summary, learningObjective, assumedKnowledge, tags, sources (`title`, `url`), check (`question`, `answer`), and scenes (`title`, `narration`, minimum `seconds`). Put helpers in `.py` files alongside `scene.py`; those files are copied into the private lesson. Other asset formats are not supported by the source-copy step yet.
+The manifest contract is `scientificManifest` in `server/scientific/render.js`: title, summary, learningObjective, assumedKnowledge, tags, sources (`title`, `url`), check (`question`, `answer`), and scenes (`title`, `narration`, minimum `seconds`). Put helpers in `.py` files alongside `scene.py`; those files are copied into the private lesson. Online raster assets use the shared [image asset contract](image-assets.md) and are retained separately with attribution in the copied source folder.
 
 ## Guidance for physics scenes
 

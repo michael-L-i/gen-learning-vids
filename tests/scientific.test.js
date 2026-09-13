@@ -75,7 +75,11 @@ test("scientific route renders real media, retains source and publishes timed le
     ],
     check: { question: "Does x increase?", answer: "Yes" },
     scenes: [
-      { title: "First", narration: "First narration", seconds: 1 },
+      {
+        title: "First",
+        narration: Array.from({ length: 22 }, (_, i) => `word${i}`).join(" "),
+        seconds: 1,
+      },
       { title: "Second", narration: "Second narration", seconds: 1 },
     ],
   };
@@ -126,7 +130,15 @@ test("scientific route renders real media, retains source and publishes timed le
     path.join(library.lessonDir(result.id), "captions.vtt"),
     "utf8",
   );
-  assert.match(vtt, /00:00:00.000 --> 00:00:00.500/);
+  assert.match(vtt, /00:00:00.000 --> 00:00:00.250/);
+  const cues = result.scenes[0].cues;
+  assert.equal(cues.length, 2);
+  assert.equal(
+    cues.map((c) => c.narration).join(" "),
+    manifest.scenes[0].narration,
+  );
+  assert.equal(cues[1].start, cues[0].duration);
+  assert.equal(cues[1].start + cues[1].duration, 0.5);
   assert.match(vtt, /Second narration/);
   assert.equal(
     await fs.readFile(
