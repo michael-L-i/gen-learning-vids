@@ -57,6 +57,8 @@ learnvid serve [--open] [--dev] [--port 4317]
 learnvid create "Topic" [--goal "What to understand"] [--source FILE] [--brief FILE] [--style auto|paper|midnight|sage] [--wait]
 learnvid create "Topic" --plan FILE [--wait]   Render an agent-authored lesson JSON
 learnvid render-scientific DIRECTORY [--python PATH]  Run trusted local scene.py + lesson.json
+learnvid image-search "QUERY"               Find images with source and license metadata
+learnvid image-info "File:COMMONS TITLE"    Resolve one Wikimedia Commons image
 learnvid create "Topic" --presentation auto|worked|diagram|code|slides --visual-brief "Visual directions"
 learnvid list
 learnvid show ID
@@ -79,6 +81,16 @@ Creation runs in the background unless --wait is provided. Source files are copi
   }
   const library = await new Library(values.library).init();
   switch (command) {
+    case "image-search":
+    case "image-info": {
+      const { commonsImages } = await import("../server/assets.js");
+      print(
+        await commonsImages(args.join(" "), {
+          exact: command === "image-info",
+        }),
+      );
+      break;
+    }
     case "render-scientific": {
       if (!args[0])
         throw new Error(
