@@ -54,7 +54,7 @@ export async function probeVideo(file) {
   );
 }
 
-// Explicit CLI only: scene.py is trusted local executable code, never model JSON from the web API.
+// Explicit CLI only: authored scenes are trusted local code, never web API JSON.
 export async function renderAuthored(
   library,
   sourceDir,
@@ -65,7 +65,8 @@ export async function renderAuthored(
   const manifest = authoredManifest.parse(
     JSON.parse(await fs.readFile(path.join(source, "lesson.json"), "utf8")),
   );
-  await fs.access(path.join(source, "scene.py"));
+  const entrypoint = adapter.entrypoint || "scene.py";
+  await fs.access(path.join(source, entrypoint));
   const rendererInfo = await adapter.check();
   const id = randomUUID(),
     dir = library.lessonDir(id),
@@ -75,7 +76,9 @@ export async function renderAuthored(
   // Keep exact authored inputs beside the result, outside Git.
   const sourceHash = createHash("sha256");
   const inputs = new Set([
-    ...(await fs.readdir(source)).filter((name) => /\.(py|json)$/.test(name)),
+    ...(await fs.readdir(source)).filter((name) =>
+      (adapter.sourcePattern || /\.(py|json)$/).test(name),
+    ),
     ...manifest.files,
   ]);
   const realSource = await fs.realpath(source);
@@ -181,7 +184,7 @@ export async function renderAuthored(
     });
     progress(adapter.stage);
     await adapter.render({
-      module: path.join(work, "source", "scene.py"),
+      module: path.join(work, "source", entrypoint),
       timeline: path.join(work, "timeline.json"),
       output: work,
       progress,

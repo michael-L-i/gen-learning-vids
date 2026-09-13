@@ -53,6 +53,7 @@ test("Blender adapter renders shared media, reuses declared frames and retains d
     Buffer.from([1, 2, 3]),
   );
   const lib = await new Library(path.join(root, "library")).init();
+  await lib.saveSettings({ ...(await lib.settings()), blenderEnabled: true });
   const result = await renderBlender(lib, source, {
     blender,
     progress: () => {},

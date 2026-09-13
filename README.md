@@ -181,3 +181,7 @@ The agent chooses and composes capabilities for the lesson; the engine renders t
 - [Scientific animation](docs/scientific-animation.md): optional Matplotlib, NumPy and SymPy scenes through an explicit trusted-local Python command.
 
 Plans can retain cited `sources` (title and URL) in the downloadable transcript. Caption chunks are estimated from narration intervals, not forced word alignments. Generated lessons and personal benchmark artifacts remain outside the repository.
+
+### Browser animation
+
+The coding agent can choose detailed 2D animation, Three.js spatial scenes and RDKit.js chemical diagrams through the [browser capability](docs/browser-animation.md). Libraries install with npm; Chromium downloads on first use. Blender remains an explicitly enabled, separately installed option. These authored routes share the app library, transcript and Q&A. The ordinary UI planner does not author JavaScript scenes yet.

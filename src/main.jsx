@@ -1962,6 +1962,27 @@ function Settings({ bootstrap, update, notify }) {
           </label>
         </section>
         <ErrorMessage message={error} />
+        <section className="settings-section">
+          <h2>Animation tools</h2>
+          <p>
+            2D animation, Three.js scenes, and chemical diagrams are available
+            through the local agent. The browser runtime downloads on first use.
+          </p>
+          <label className="field">
+            Blender
+            <select
+              value={settings.blenderEnabled ? "enabled" : "disabled"}
+              onChange={(e) =>
+                change("blenderEnabled", e.target.value === "enabled")
+              }
+            >
+              <option value="disabled">Disabled</option>
+              <option value="enabled">
+                Enabled — requires Blender installed
+              </option>
+            </select>
+          </label>
+        </section>
         <button className="primary" disabled={busy}>
           {busy ? "Saving…" : "Save settings"}
           <Check size={16} />

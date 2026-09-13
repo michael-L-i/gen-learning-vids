@@ -25,6 +25,10 @@ export async function renderBlender(
   sourceDir,
   { blender, ...options } = {},
 ) {
+  if (!(await library.settings()).blenderEnabled)
+    throw new Error(
+      "Blender is disabled. Enable it in Settings or run learnvid capability enable blender. Blender must be installed separately.",
+    );
   const executable = await blenderExecutable(blender);
   const adapter = {
     name: "blender",

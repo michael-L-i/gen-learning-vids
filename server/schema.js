@@ -9,6 +9,7 @@ const presentation = z.enum(presentations);
 const palette = z.enum(["auto", "paper", "midnight", "sage"]);
 
 export const settingsSchema = z.object({
+  blenderEnabled: z.boolean().default(false),
   provider: z.enum(["codex", "claude"]).default("codex"),
   model: z.string().max(120).default(""),
   tts: z.enum(["kokoro", "system", "piper"]).default("kokoro"),

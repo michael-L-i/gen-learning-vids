@@ -11,6 +11,7 @@ isolated background process starts with factory settings. MolecularNodes, PyVist
 and other optional data tools are not required or bundled.
 
 ```sh
+learnvid capability enable blender  # explicit opt-in; disabled by default
 learnvid render-blender /absolute/path/to/authored-lesson
 learnvid render-blender /absolute/path/to/authored-lesson --blender /path/to/blender
 ```
