@@ -136,3 +136,28 @@ test("globe renders a real narrated MP4 through the shared animation renderer", 
   assert.ok(Math.abs(Number(probe.format.duration) - 1) < 0.1);
   await run("ffmpeg", ["-v", "error", "-i", r.video, "-f", "null", "-"]);
 });
+
+test("individual country fades share the camera and reject missing targets", async () => {
+  const a = base();
+  a.tracks = [
+    {
+      node: "earth",
+      property: "highlight:VEN",
+      beat: "a",
+      start: 0,
+      end: 1,
+      from: 0,
+      to: 1,
+      easing: "linear",
+    },
+  ];
+  const p = await prepareAnimation(a),
+    t = beatTimeline(p.animation, [2]);
+  assert.equal(
+    frameState(p.animation, t, 1).get("earth")["highlight:VEN"],
+    0.5,
+  );
+  assert.match(animationSvg(p, t, 1), /fill="#FFCC44" opacity="0.5"/);
+  a.tracks[0].property = "highlight:CAN";
+  assert.throws(() => validateAnimation(a), /highlight tracks/);
+});

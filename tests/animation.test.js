@@ -213,6 +213,12 @@ test("mixed legacy and animated chapters concatenate without timebase drift", as
       id,
       title: "Mixed rendering",
       summary: "Timing",
+      sources: [
+        {
+          title: "Source retained in transcript",
+          url: "https://example.com/data",
+        },
+      ],
       scenes: [legacy, animated, legacy],
       style: "auto",
     },
@@ -241,6 +247,10 @@ test("mixed legacy and animated chapters concatenate without timebase drift", as
     JSON.stringify(info),
   );
   assert.equal(result.scenes[1].start, 0.75);
+  assert.match(
+    await fs.readFile(path.join(lib.lessonDir(id), "transcript.md"), "utf8"),
+    /\[Source retained in transcript\]\(https:\/\/example.com\/data\)/,
+  );
   await run("ffmpeg", [
     "-v",
     "error",
@@ -250,4 +260,17 @@ test("mixed legacy and animated chapters concatenate without timebase drift", as
     "null",
     "-",
   ]);
+});
+
+test("narration-beat captions stay short, complete and inside their interval", async () => {
+  const { captions } = await import("../server/render.js");
+  const narration = Array.from({ length: 22 }, (_, i) => `word${i}`).join(" ");
+  const vtt = captions([
+    { start: 2, cues: [{ start: 1, duration: 4, narration }] },
+  ]);
+  assert.match(vtt, /00:00:03.000 --> 00:00:05.000/);
+  assert.match(vtt, /00:00:05.000 --> 00:00:07.000/);
+  const lines = vtt.split("\n").filter((l) => l.startsWith("word"));
+  assert.equal(lines.join(" "), narration);
+  assert.ok(lines.every((l) => l.split(" ").length <= 11));
 });

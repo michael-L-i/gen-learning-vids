@@ -49,10 +49,15 @@ export function captions(scenes) {
   const cues = [];
   for (const scene of scenes) {
     if (scene.cues) {
-      for (const cue of scene.cues)
-        cues.push(
-          `${vttTime(scene.start + cue.start)} --> ${vttTime(scene.start + cue.start + cue.duration)}\n${escapeXml(cue.narration)}`,
-        );
+      for (const cue of scene.cues) {
+        const words = cue.narration.split(/\s+/);
+        for (let i = 0; i < words.length; i += 11) {
+          const end = Math.min(i + 11, words.length);
+          cues.push(
+            `${vttTime(scene.start + cue.start + (cue.duration * i) / words.length)} --> ${vttTime(scene.start + cue.start + (cue.duration * end) / words.length)}\n${escapeXml(words.slice(i, end).join(" "))}`,
+          );
+        }
+      }
       continue;
     }
     const words = scene.narration.split(/\s+/);
@@ -253,6 +258,10 @@ export async function renderLesson(
       scenes
         .map((s) => `## ${clock(s.start)} — ${s.title}\n\n${s.narration}\n`)
         .join("\n") +
+      ((lesson.sources || []).length
+        ? "\nSources:\n" +
+          lesson.sources.map((s) => `- [${s.title}](${s.url})`).join("\n")
+        : "") +
       "\n" +
       credits,
   );

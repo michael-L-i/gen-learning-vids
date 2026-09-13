@@ -183,6 +183,12 @@ export const sceneSchema = z
       });
   });
 export const lessonPlanSchema = z.object({
+  sources: z
+    .array(
+      z.object({ title: z.string().min(1).max(200), url: z.string().url() }),
+    )
+    .max(12)
+    .default([]),
   assets: assetsSchema,
   title: z.string().min(1).max(100),
   summary: z.string().min(1).max(400),
