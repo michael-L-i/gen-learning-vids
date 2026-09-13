@@ -28,7 +28,6 @@ Existing plans survive rendering failure. Retry captures current speech/provider
 - `server/providers.js`: headless Codex/Claude adapters and instructional prompts.
 - `server/render.js`: timed visual sequences, media encoding, transcripts and citations.
 - `server/animation`: validated scene graph, narration-relative tracks and measured text layout.
-- `server/biology`: optional diagram authoring helpers compiled to standard animation nodes, and biology planner guidance.
 - `server/geography`: reusable D3 globe projection, country geometry, highlighting and camera support.
 - `server/assets.js`: bounded image retrieval, local raster normalization and attribution.
 - `server/scientific`: optional trusted-local mathematical scenes and shared publication workflow.
