@@ -1,0 +1,16 @@
+{
+  "id": "chemistry-conservation",
+  "version": 1,
+  "subject": "Chemistry",
+  "title": "Atoms are conserved",
+  "prompt": "Animate 2 H₂ + O₂ → 2 H₂O with atom identities preserved. Explain counting, not the chemical reaction mechanism.",
+  "learner": "Recognizes hydrogen, oxygen, and molecular formulas.",
+  "styleBrief": "Particle bookkeeping: fixed atom colors and sizes, spatial regrouping, persistent equation.",
+  "variationKey": "chemistry-conservation-v1",
+  "targetSeconds": 12,
+  "criteria": [
+    "Exactly four hydrogen and two oxygen atoms remain throughout.",
+    "Each final water group contains one oxygen and two hydrogens.",
+    "Describe the animation as atom accounting, not a reaction pathway."
+  ]
+}

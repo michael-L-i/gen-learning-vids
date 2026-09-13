@@ -1,0 +1,16 @@
+{
+  "id": "math-square",
+  "version": 1,
+  "subject": "Mathematics",
+  "title": "Completing a square",
+  "prompt": "Explain geometrically why x² + 2x + 1 = (x + 1)², using a square, two strips, and a missing corner.",
+  "learner": "Knows rectangle area and simple algebra.",
+  "styleBrief": "Geometric construction: colored area pieces move into place; symbolic labels stay attached.",
+  "variationKey": "math-square-v1",
+  "targetSeconds": 12,
+  "criteria": [
+    "The two strips each have area x, and the corner has area 1.",
+    "The completed square has side x + 1.",
+    "Movement should preserve each piece's size."
+  ]
+}

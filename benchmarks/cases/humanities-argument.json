@@ -1,0 +1,16 @@
+{
+  "id": "humanities-argument",
+  "version": 1,
+  "subject": "Humanities",
+  "title": "Evidence and a qualified claim",
+  "prompt": "Explain why one successful school tutoring trial supports a qualified claim about that setting, not a universal claim that tutoring always works.",
+  "learner": "Can distinguish a claim from an example.",
+  "styleBrief": "Argument annotation: highlight the evidence, connect it to a bounded claim, then mark the unsupported generalization.",
+  "variationKey": "humanities-argument-v1",
+  "targetSeconds": 12,
+  "criteria": [
+    "One trial cannot establish that tutoring always works everywhere.",
+    "Keep the example hypothetical; do not invent study results.",
+    "Use motion to reveal the scope of inference."
+  ]
+}

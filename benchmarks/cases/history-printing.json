@@ -1,0 +1,16 @@
+{
+  "id": "history-printing",
+  "version": 1,
+  "subject": "History",
+  "title": "Early European printing spreads",
+  "prompt": "Show three milestones in early European movable-type printing: Gutenberg's work in Mainz around 1450, the Gutenberg Bible around 1455, and a press in Paris in 1470. Avoid claiming Gutenberg invented all printing.",
+  "learner": "No prior knowledge of printing history.",
+  "styleBrief": "Editorial timeline with date anchors, small page illustrations, and progressive annotations.",
+  "variationKey": "history-printing-v1",
+  "targetSeconds": 12,
+  "criteria": [
+    "Scope is early European movable-type printing, not the origin of printing worldwide.",
+    "Use approximate dates for Gutenberg's work and Bible.",
+    "Keep timeline positions proportional to dates."
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "id": "biology-enzyme",
+  "version": 1,
+  "subject": "Biology",
+  "title": "An enzyme binds and releases",
+  "prompt": "Show a substrate binding to an enzyme active site and subsequently leaving. Focus on binding specificity, without claiming all enzymes are rigid locks.",
+  "learner": "Has heard of proteins; no biochemistry background.",
+  "styleBrief": "Large organic silhouettes with a close-up binding site and direct labels; a schematic illustration, not a molecular simulation.",
+  "variationKey": "biology-enzyme-v1",
+  "targetSeconds": 12,
+  "criteria": [
+    "Enzyme persists after binding and release.",
+    "Label the active site and substrate clearly.",
+    "State that the simplified shapes represent binding, not atom-level detail."
+  ]
+}

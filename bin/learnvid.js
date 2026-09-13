@@ -1,5 +1,13 @@
 #!/usr/bin/env node
 import fs from "node:fs/promises";
+import {
+  benchmarkCases,
+  benchmarkRuns,
+  benchmarkRun,
+  createBenchmarkRun,
+  executeBenchmarkRun,
+  startBenchmarkWorker,
+} from "../server/benchmarks.js";
 import path from "node:path";
 import { parseArgs } from "node:util";
 import { spawn } from "node:child_process";
@@ -20,6 +28,10 @@ const { values, positionals } = parseArgs({
   allowPositionals: true,
   options: {
     library: { type: "string" },
+    mode: { type: "string" },
+    label: { type: "string" },
+    case: { type: "string", multiple: true },
+    from: { type: "string" },
     port: { type: "string" },
     output: { type: "string" },
     dev: { type: "boolean" },
@@ -56,6 +68,8 @@ learnvid serve [--open] [--dev] [--port 4317]
 learnvid create "Topic" [--goal "What to understand"] [--source FILE] [--brief FILE] [--style auto|paper|midnight|sage] [--wait]
 learnvid create "Topic" --plan FILE [--wait]   Render an agent-authored lesson JSON
 learnvid create "Topic" --presentation auto|worked|diagram|code|slides --visual-brief "Visual directions"
+learnvid benchmark cases|list|show [RUN_ID]
+learnvid benchmark run [--mode agent|reference|replay] [--case ID] [--label NAME] [--from RUN_ID] [--wait]
 learnvid list
 learnvid show ID
 learnvid ask ID "Question about the lesson"
@@ -77,6 +91,31 @@ Creation runs in the background unless --wait is provided. Source files are copi
   }
   const library = await new Library(values.library).init();
   switch (command) {
+    case "benchmark": {
+      if (args[0] === "cases") print(await benchmarkCases());
+      else if (args[0] === "list") print(await benchmarkRuns(library));
+      else if (args[0] === "show") print(await benchmarkRun(library, args[1]));
+      else if (args[0] === "run") {
+        const record = await createBenchmarkRun(library, {
+          mode: values.mode,
+          label: values.label,
+          caseIds: values.case,
+          fromRun: values.from,
+        });
+        if (values.wait) {
+          const result = await executeBenchmarkRun(library, record.id);
+          print(result);
+          if (result.status !== "complete") process.exitCode = 1;
+        } else {
+          startBenchmarkWorker(library, record.id);
+          print(record);
+        }
+      } else throw new Error("Use benchmark cases, list, show, or run.");
+      break;
+    }
+    case "benchmark-worker":
+      await executeBenchmarkRun(library, args[0]);
+      break;
     case "serve": {
       const { startServer } = await import("../server/app.js");
       const instance = await startServer({

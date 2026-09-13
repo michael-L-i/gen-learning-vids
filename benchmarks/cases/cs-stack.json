@@ -1,0 +1,16 @@
+{
+  "id": "cs-stack",
+  "version": 1,
+  "subject": "Computer science",
+  "title": "A recursive call returns",
+  "prompt": "Trace factorial(2) through factorial(1), emphasizing return values and the shrinking call stack.",
+  "learner": "Knows functions and multiplication; new to recursion.",
+  "styleBrief": "Dark code workspace with a separate stack and return-value trace. Highlight only the currently relevant line.",
+  "variationKey": "cs-stack-v1",
+  "targetSeconds": 12,
+  "criteria": [
+    "factorial(1) returns 1; factorial(2) returns 2 × 1 = 2.",
+    "Stack grows on a call and shrinks on return.",
+    "Code and stack must agree."
+  ]
+}

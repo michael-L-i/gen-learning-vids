@@ -1,0 +1,16 @@
+{
+  "id": "physics-kinematics",
+  "version": 1,
+  "subject": "Physics",
+  "title": "Distance under constant acceleration",
+  "prompt": "Solve the distance traveled by a cart starting from rest, accelerating at 2 m/s² for 4 s. Animate the cart and a synchronized velocity-time graph.",
+  "learner": "Knows velocity; new to constant acceleration.",
+  "styleBrief": "Technical diagram: moving cart on a track, attached velocity arrow, graph on the right, compact calculation.",
+  "variationKey": "physics-kinematics-v1",
+  "targetSeconds": 12,
+  "criteria": [
+    "Displacement is 16 m; final velocity is 8 m/s.",
+    "Cart position grows quadratically with simulated time; velocity grows linearly.",
+    "Distinguish simulated time from video playback time."
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "id": "engineering-feedback",
+  "version": 1,
+  "subject": "Engineering",
+  "title": "Feedback reduces an error",
+  "prompt": "Explain a thermostat feedback loop: measure temperature, compare with target, apply heat, measure again. Show a qualitative approach toward the target.",
+  "learner": "Everyday familiarity with room temperature.",
+  "styleBrief": "System diagram paired with a growing response curve; signal direction is conveyed by a moving marker.",
+  "variationKey": "engineering-feedback-v1",
+  "targetSeconds": 12,
+  "criteria": [
+    "Error is target minus measured temperature.",
+    "The feedback path returns a measurement to the controller.",
+    "Response curve is qualitative, with no invented controller tuning."
+  ]
+}
