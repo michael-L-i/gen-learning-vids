@@ -176,22 +176,34 @@ export async function createBenchmarkRun(library, input = {}) {
     const prompt = benchmarkPrompt(definition);
     await atomicWrite(path.join(target, "prompt.txt"), prompt);
     if (options.mode !== "agent") {
-      const scene = sceneSchema.parse(
-        await readJson(
-          source
-            ? path.join(
-                caseDir(library, source.id, definition.id),
-                "storyboard.json",
-              )
-            : path.join(
-                repository,
-                "benchmarks",
-                "references",
-                `${definition.id}.json`,
-              ),
-        ),
+      let raw;
+      if (source) {
+        const original = caseDir(library, source.id, definition.id);
+        try {
+          raw = await readJson(path.join(original, "storyboard.json"));
+        } catch (e) {
+          if (e.code !== "ENOENT") throw e;
+          // A newer engine can accept a preserved response rejected by an older contract.
+          raw = parseAgentJson(
+            await fs.readFile(
+              path.join(original, "agent-response.txt"),
+              "utf8",
+            ),
+          );
+        }
+      } else
+        raw = await readJson(
+          path.join(
+            repository,
+            "benchmarks",
+            "references",
+            `${definition.id}.json`,
+          ),
+        );
+      await writeJson(
+        path.join(target, "storyboard.json"),
+        sceneSchema.parse(raw),
       );
-      await writeJson(path.join(target, "storyboard.json"), scene);
     }
     record.cases.push({
       id: definition.id,

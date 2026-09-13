@@ -42,6 +42,12 @@ test("constant acceleration, attached objects, and narration-scaled timing share
   assert.equal(states.get("body").parent, "cart");
   assert.equal(frameState(a, timeline, 16).get("cart").x, 690);
   assert.equal(frameState(a, timeline, 0).get("slope").draw, 0);
+  const zero = structuredClone(a);
+  zero.tracks.find((t) => t.property === "scale").from = 0;
+  assert.equal(
+    frameState(validateAnimation(zero), timeline, 0).get("arrow").scale,
+    0,
+  );
 });
 test("invalid tracks, parent cycles, markup and mismatched narration are rejected", () => {
   let a = structuredClone(fixture.content);
@@ -150,6 +156,7 @@ test("benchmark agent run renders actual media, preserves timing, replays and st
     (await benchmarkRun(lib, record.id)).feedback[item.id].notes,
     feedback.notes,
   );
+  await fs.unlink(path.join(dir, "storyboard.json")); // Replay can recover the preserved agent response.
   const replay = await createBenchmarkRun(lib, {
     mode: "replay",
     fromRun: record.id,

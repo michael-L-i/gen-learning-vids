@@ -27,6 +27,7 @@ import {
   X,
 } from "lucide-react";
 import "./styles.css";
+import Benchmarks from "./Benchmarks.jsx";
 import { kokoroVoices } from "../server/speech-options.js";
 
 const presentationOptions = [
@@ -232,6 +233,7 @@ function App() {
             ["library", Grid2X2, "Video library"],
             ["sources", FolderOpen, "Sources & notes"],
             ["profile", UserRound, "Learning profile"],
+            ["benchmarks", Video, "Benchmarks"],
           ].map(([id, Icon, label]) => (
             <button
               key={id}
@@ -268,6 +270,8 @@ function App() {
           />
         ) : page === "sources" ? (
           <Sources sources={sources} reload={reload} notify={setToast} />
+        ) : page === "benchmarks" ? (
+          <Benchmarks api={api} post={post} />
         ) : page === "profile" ? (
           <Profile notify={setToast} />
         ) : (

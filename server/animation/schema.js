@@ -25,7 +25,7 @@ export const animationSchema = z.object({
         width: number.min(0).max(2560).default(0),
         height: number.min(0).max(1440).default(0),
         rotation: number.min(-3600).max(3600).default(0),
-        scale: number.min(0.01).max(10).default(1),
+        scale: number.min(0).max(10).default(1),
         opacity: number.min(0).max(1).default(1),
         fill: color.default("none"),
         stroke: color.default("none"),
@@ -89,8 +89,8 @@ export function validateAnimation(value) {
       [t.from, t.to].some((v) => v < 0 || v > 1)
     )
       throw new Error("Opacity and draw values must be between zero and one.");
-    if (t.property === "scale" && [t.from, t.to].some((v) => v <= 0 || v > 10))
-      throw new Error("Scale must be positive and at most ten.");
+    if (t.property === "scale" && [t.from, t.to].some((v) => v < 0 || v > 10))
+      throw new Error("Scale must be between zero and ten.");
     if (t.property === "draw" && nodes.get(t.node).type !== "path")
       throw new Error("Draw tracks require a path.");
     const key = `${t.node}:${t.property}`;

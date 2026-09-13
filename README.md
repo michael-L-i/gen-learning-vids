@@ -169,3 +169,7 @@ Kokoro uses the [official Kokoro.js implementation](https://github.com/hexgrad/k
 learnvid voices
 learnvid speech-preview --output /tmp/voice-preview.wav
 ```
+
+## Animation benchmarks
+
+Open **Benchmarks** to generate short clips across eight subjects, compare saved runs, and record timestamped feedback. The UI and `learnvid benchmark` CLI share the lesson renderer. See [benchmark usage and architecture](benchmarks/README.md) for reference fixtures, prompt runs, replay, and current limits.

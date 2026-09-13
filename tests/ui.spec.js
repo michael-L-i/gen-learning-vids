@@ -445,3 +445,82 @@ test("chat services show logos and preview the selected provider's exports", asy
     expect(saved.content).toBe(`${expected}\nMy own context.`);
   }
 });
+
+test("benchmark viewer compares runs and persists timestamped review", async ({
+  page,
+}) => {
+  const { createBenchmarkRun, executeBenchmarkRun, caseDir } = await import(
+    "../server/benchmarks.js"
+  );
+  const first = await createBenchmarkRun(instance.library, {
+    mode: "reference",
+    caseIds: ["physics-kinematics"],
+    label: "UI reference",
+  });
+  const file = path.join(
+    caseDir(instance.library, first.id, "physics-kinematics"),
+    "storyboard.json",
+  );
+  const scene = JSON.parse(await fs.readFile(file));
+  scene.content.beats.forEach((b) => (b.seconds = 0.5));
+  await fs.writeFile(file, JSON.stringify(scene));
+  const opts = {
+    synthesize: async (_, file) =>
+      fs.writeFile(file, pcmWave(new Float32Array(12000))),
+  };
+  await executeBenchmarkRun(instance.library, first.id, opts);
+  const second = await createBenchmarkRun(instance.library, {
+    mode: "replay",
+    fromRun: first.id,
+    label: "UI replay",
+  });
+  await executeBenchmarkRun(instance.library, second.id, opts);
+  await page.goto(instance.url);
+  await page.getByRole("button", { name: "Benchmarks", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Benchmarks", exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: /Physics Distance under constant/ })
+    .click();
+  await page.getByLabel("Run", { exact: true }).selectOption(second.id);
+  await page.getByLabel("Compare with", { exact: true }).selectOption(first.id);
+  await expect(page.locator("video")).toHaveCount(2);
+  await expect
+    .poll(() =>
+      page
+        .locator("video")
+        .first()
+        .evaluate((v) => v.readyState),
+    )
+    .toBeGreaterThan(0);
+  await page
+    .getByLabel("Notes", { exact: true })
+    .fill("At 0.5s keep the arrow attached.");
+  await page.getByLabel("Timestamp (seconds)").fill("0.5");
+  await page.getByLabel("motion score").selectOption("4");
+  await page.getByLabel("Decision").selectOption("keep");
+  await page.getByLabel("Preferred clip").selectOption("current");
+  await page
+    .getByRole("button", { name: "Save feedback", exact: true })
+    .click();
+  await expect(page.getByRole("status")).toHaveText("Feedback saved");
+  await page.reload();
+  await page.getByRole("button", { name: "Benchmarks", exact: true }).click();
+  await page
+    .getByRole("button", { name: /Physics Distance under constant/ })
+    .click();
+  await expect(page.getByLabel("Notes", { exact: true })).toHaveValue(
+    "At 0.5s keep the arrow attached.",
+  );
+  await expect(page.getByLabel("motion score")).toHaveValue("4");
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(
+    page.getByRole("heading", { name: "Benchmarks", exact: true }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
+});

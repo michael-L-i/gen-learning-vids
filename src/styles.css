@@ -1584,6 +1584,8 @@ pre {
   }
   .sidebar nav {
     display: flex;
+    flex-wrap: wrap;
+    min-width: 0;
     grid-column: 1 / -1;
     gap: 3px;
   }

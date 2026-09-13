@@ -1,4 +1,13 @@
 import express from "express";
+import {
+  benchmarkCases,
+  benchmarkRuns,
+  benchmarkRun,
+  createBenchmarkRun,
+  startBenchmarkWorker,
+  saveBenchmarkFeedback,
+  caseDir,
+} from "./benchmarks.js";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -330,6 +339,66 @@ export async function createApp(
   app.put(
     "/api/settings",
     wrap(async (req, res) => res.json(await library.saveSettings(req.body))),
+  );
+  app.get(
+    "/api/benchmarks/cases",
+    wrap(async (_, res) => res.json(await benchmarkCases())),
+  );
+  app.get(
+    "/api/benchmarks/runs",
+    wrap(async (_, res) => res.json(await benchmarkRuns(library))),
+  );
+  app.post(
+    "/api/benchmarks/runs",
+    wrap(async (req, res) => {
+      const record = await createBenchmarkRun(library, req.body);
+      startBenchmarkWorker(library, record.id);
+      res.status(202).json(record);
+    }),
+  );
+  app.get(
+    "/api/benchmarks/runs/:id",
+    wrap(async (req, res) =>
+      res.json(await benchmarkRun(library, req.params.id)),
+    ),
+  );
+  app.put(
+    "/api/benchmarks/runs/:id/cases/:key/feedback",
+    wrap(async (req, res) =>
+      res.json(
+        await saveBenchmarkFeedback(
+          library,
+          req.params.id,
+          req.params.key,
+          req.body,
+        ),
+      ),
+    ),
+  );
+  app.get(
+    "/api/benchmarks/runs/:id/cases/:key/files/:name",
+    wrap(async (req, res) => {
+      const allowed = [
+        "video.mp4",
+        "thumbnail.png",
+        "storyboard.json",
+        "prompt.txt",
+        "transcript.md",
+        "captions.vtt",
+        "timeline-0.json",
+        "checks-0.json",
+        "media.json",
+      ];
+      if (!allowed.includes(req.params.name))
+        return res.status(404).json({ error: "File not found." });
+      res.sendFile(
+        path.join(
+          caseDir(library, req.params.id, req.params.key),
+          req.params.name,
+        ),
+        { dotfiles: "allow" },
+      );
+    }),
   );
   app.use("/api", (_, res) => res.status(404).json({ error: "Not found." }));
   if (dev) {

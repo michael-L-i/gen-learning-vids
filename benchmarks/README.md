@@ -18,7 +18,7 @@ Without `--wait`, generation continues in a detached worker. Both the CLI and UI
 
 - **Prompt generation:** the configured local agent creates a new animation storyboard from each saved prompt. The exact prompt and raw response are retained. This tests planning and rendering together.
 - **Reference storyboard:** authored fixtures in `references/` are rendered directly. This isolates renderer behavior; these are not agent-generated results or quality targets.
-- **Storyboard replay:** a prior run's saved storyboards and case definitions are rendered with the current engine and current speech settings. A case must have a saved valid storyboard to replay. For planning failures, start another prompt run.
+- **Storyboard replay:** a prior run's saved storyboards and case definitions are rendered with the current engine and current speech settings. Replay can also recover a preserved agent response that a newer engine now accepts. If neither artifact validates, start another prompt run.
 
 `build-references.js` is the editable source of the authored fixtures. Run `node benchmarks/build-references.js` after editing it. Each case in `cases/` has a stable ID, version, prompt, learner context, style brief, variation key, duration target, and human review criteria. The variation key is included in the prompt; Codex/Claude CLI generation is **not guaranteed deterministic**. Bump a case version when its instructional task changes. Do not add private learner examples here.
 
