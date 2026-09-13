@@ -4,6 +4,7 @@ import sharp from "sharp";
 import { run } from "./process.js";
 import { atomicWrite } from "./store.js";
 import { speak } from "./speech.js";
+import { renderAnimation } from "./animation/render.js";
 
 import { palettes, escapeXml, wrap, textLines } from "./visual-utils.js";
 import { contentSvg, frameCount, resolvePalette } from "./visuals.js";
@@ -46,6 +47,13 @@ function vttTime(s) {
 export function captions(scenes) {
   const cues = [];
   for (const scene of scenes) {
+    if (scene.cues) {
+      for (const cue of scene.cues)
+        cues.push(
+          `${vttTime(scene.start + cue.start)} --> ${vttTime(scene.start + cue.start + cue.duration)}\n${escapeXml(cue.narration)}`,
+        );
+      continue;
+    }
     const words = scene.narration.split(/\s+/);
     const chunk = 11;
     for (let i = 0; i < words.length; i += chunk) {
@@ -85,6 +93,40 @@ export async function renderLesson(
   const scenes = [];
   for (let i = 0; i < lesson.scenes.length; i++) {
     const scene = lesson.scenes[i];
+    if (scene.content?.kind === "animation") {
+      const animationDir = path.join(render, `animation-${i}`);
+      const result = await renderAnimation({
+        scene,
+        dir: animationDir,
+        settings,
+        synthesize,
+        cacheDir: path.join(library.root, ".models", "kokoro"),
+        progress: (stage) =>
+          progress(stage, 15 + (70 * i) / lesson.scenes.length),
+      });
+      await fs.rename(result.video, path.join(render, `scene-${i}.mp4`));
+      if (i === 0)
+        await fs.copyFile(
+          path.join(animationDir, "thumbnail.png"),
+          path.join(dir, "thumbnail.png"),
+        );
+      await fs.copyFile(
+        path.join(animationDir, "timeline.json"),
+        path.join(dir, `timeline-${i}.json`),
+      );
+      await fs.copyFile(
+        path.join(animationDir, "checks.json"),
+        path.join(dir, `checks-${i}.json`),
+      );
+      scenes.push({
+        ...scene,
+        start,
+        duration: result.duration,
+        cues: result.timeline,
+      });
+      start += result.duration;
+      continue;
+    }
     await progress(
       `Narrating chapter ${i + 1} of ${lesson.scenes.length}`,
       15 + (70 * i) / lesson.scenes.length,
@@ -140,17 +182,15 @@ export async function renderLesson(
       "-i",
       audio,
       "-r",
-      "24",
+      "30",
       "-c:v",
       "libx264",
       "-preset",
-      "ultrafast",
-      "-tune",
-      "stillimage",
+      "fast",
       "-crf",
-      "23",
+      "18",
       "-vf",
-      "fps=24,fade=t=in:st=0:d=0.3,format=yuv420p",
+      "fps=30,fade=t=in:st=0:d=0.3,format=yuv420p",
       "-c:a",
       "aac",
       "-b:a",

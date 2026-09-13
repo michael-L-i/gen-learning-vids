@@ -34,7 +34,8 @@
     "react-dom": "^19.2.0",
     "sharp": "^0.34.5",
     "zod": "^3.25.76",
-    "zod-to-json-schema": "^3.25.1"
+    "zod-to-json-schema": "^3.25.1",
+    "svg-path-properties": "2.1.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.55.0",
