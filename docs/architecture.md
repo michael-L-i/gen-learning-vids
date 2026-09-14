@@ -66,3 +66,31 @@ Voice previews are generated from unsaved settings, cached by configuration, and
 ## Agent-selected rendering capabilities
 
 The installed lesson skill exposes `learnvid capabilities` and the authored browser contract. The calling coding agent chooses capabilities and authors scene code; the ordinary HTTP planner still produces validated JSON only. Browser libraries install with npm and managed Chromium downloads on first use. FFmpeg remains a separately required encoder in the current checkout workflow. Blender defaults to disabled and its renderer enforces the per-library setting even when an executable is supplied. These are engine capabilities within the existing Lesson Library plugin, not separately published marketplaces.
+
+## Adaptive teaching and review
+
+The provider planner and installed lesson skill share `references/teaching.md`.
+The engine packages that reference alongside its runtime. A lesson may preserve
+`teaching` metadata describing learner evidence, provisional prerequisites,
+uncertainties, focus, omissions, approach, pacing and symbol meanings. This does
+not update the learner profile or automatically draw a legend.
+
+Provider planning makes one draft call followed by one targeted revision call.
+The reviewer returns replacements of existing lesson fields, plus change notes
+and limitations. Replacements apply to a clone; the complete result passes the
+same lesson schema, narration and visual checks before rendering. Invalid edits
+fail explicitly. The pipeline does not silently publish an unreviewed draft or
+repeat the model loop indefinitely. Agent-authored manifests preserve the same
+teaching/review metadata but are reviewed by the calling author through the skill.
+
+Static layouts can use measured narration beats with a zero-based `visualStep`.
+Repeated steps hold the current view; a later step reveals the next equation,
+node or numbered point. Animation and authored routes also support processing
+holds after speech. Captions cover the spoken intervals, leaving holds empty;
+word positions within a beat are estimated. Legacy plans remain accepted.
+Browser capture saves previews at every beat start and processing hold, alongside
+chapter samples, so an author can inspect transitions that coarse sampling misses.
+
+Schema validity and a recorded review are not proof of scientific correctness or
+learner comprehension. User feedback and inspection of actual rendered evidence
+remain necessary. Provider calls requiring signed-in CLIs remain outside default CI.

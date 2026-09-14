@@ -61,3 +61,62 @@ export function validateNarrationBeats(scene, ctx) {
       message: "Chapter narration must equal the joined beat narration",
     });
 }
+
+// A review edits only changed values; regenerating every drawing node adds
+// substantial latency and can accidentally damage correct visual geometry.
+export const revisionSchema = reviewSchema.extend({
+  edits: z
+    .array(
+      z.object({
+        path: z
+          .string()
+          .regex(
+            /^\/(?:[A-Za-z][A-Za-z0-9]*|0|[1-9][0-9]*)(?:\/(?:[A-Za-z][A-Za-z0-9]*|0|[1-9][0-9]*))*$/,
+          )
+          .max(300),
+        valueJson: z.string().min(1).max(100000),
+      }),
+    )
+    .max(40),
+});
+
+export function applyLessonEdits(draft, edits) {
+  const plan = structuredClone(draft);
+  const roots = new Set([
+    "title",
+    "summary",
+    "learningObjective",
+    "assumedKnowledge",
+    "tags",
+    "scenes",
+    "check",
+    "teaching",
+    "sources",
+    "assets",
+  ]);
+  for (const edit of edits) {
+    const parts = edit.path.slice(1).split("/");
+    if (
+      !edit.path.startsWith("/") ||
+      !roots.has(parts[0]) ||
+      parts.some((p) => ["__proto__", "prototype", "constructor"].includes(p))
+    )
+      throw new Error(`Invalid lesson review path: ${edit.path}`);
+    let parent = plan;
+    for (const key of parts.slice(0, -1)) {
+      if (!parent || !Object.hasOwn(parent, key))
+        throw new Error(`Lesson review path does not exist: ${edit.path}`);
+      parent = parent[key];
+    }
+    const key = parts.at(-1);
+    if (
+      !parent ||
+      typeof parent !== "object" ||
+      !Object.hasOwn(parent, key) ||
+      (Array.isArray(parent) && !/^(0|[1-9][0-9]*)$/.test(key))
+    )
+      throw new Error(`Lesson review path does not exist: ${edit.path}`);
+    parent[key] = JSON.parse(edit.valueJson);
+  }
+  return plan;
+}

@@ -4,6 +4,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { lessonPlanSchema, sceneSchema } from "../server/schema.js";
+import { applyLessonEdits } from "../server/teaching.js";
 import { generatePlan } from "../server/providers.js";
 import { renderLesson, revealTimeline, captions } from "../server/render.js";
 import { Library } from "../server/store.js";
@@ -103,13 +104,15 @@ test("planner uses the revised content, preserves calibration and stops after on
           prompt.includes(JSON.stringify(lessonPlanSchema.parse(plan))),
         );
         return JSON.stringify({
-          ...plan,
-          title: "Revised explanation",
-          teaching,
-          review: {
-            changes: ["Kept the initial equation visible."],
-            limitations: [],
-          },
+          changes: ["Kept the initial equation visible."],
+          limitations: [],
+          edits: [
+            {
+              path: "/title",
+              valueJson: JSON.stringify("Revised explanation"),
+            },
+            { path: "/teaching", valueJson: JSON.stringify(teaching) },
+          ],
         });
       },
       progress: async (stage) => stages.push(stage),
@@ -139,7 +142,20 @@ test("planner uses the revised content, preserves calibration and stops after on
   assert.equal(failedCalls, 2);
   await assert.rejects(
     () =>
-      generatePlan({}, {}, {}, {}, { agent: async () => JSON.stringify(plan) }),
+      generatePlan(
+        {},
+        {},
+        {},
+        {},
+        {
+          agent: async (_, prompt) =>
+            JSON.stringify(
+              prompt.startsWith("Review a narrated")
+                ? { changes: [], limitations: [], edits: [] }
+                : plan,
+            ),
+        },
+      ),
     /teaching plan/,
   );
 });
@@ -208,4 +224,51 @@ test("actual static MP4 preserves measured speech, unequal holds and caption gap
   assert.ok(info.streams.some((x) => x.codec_type === "audio"));
   assert.ok(info.streams.some((x) => x.width === 1280 && x.height === 720));
   await run("ffmpeg", ["-v", "error", "-i", video, "-f", "null", "-"]);
+});
+
+test("review edits are atomic, restricted to existing lesson fields, and revalidated", async () => {
+  const draft = lessonPlanSchema.parse(plan);
+  const updated = applyLessonEdits(draft, [
+    { path: "/scenes/0/beats/1/pauseAfter", valueJson: "2.5" },
+  ]);
+  assert.equal(updated.scenes[0].beats[1].pauseAfter, 2.5);
+  assert.equal(draft.scenes[0].beats[1].pauseAfter, 1.2);
+  for (const path of [
+    "/workerPid",
+    "/scenes/99/title",
+    "/scenes/length",
+    "/scenes/0/__proto__/polluted",
+  ])
+    assert.throws(() =>
+      applyLessonEdits(draft, [{ path, valueJson: '"bad"' }]),
+    );
+  let calls = 0;
+  await assert.rejects(
+    () =>
+      generatePlan(
+        {},
+        {},
+        {},
+        {},
+        {
+          agent: async () =>
+            JSON.stringify(
+              ++calls === 1
+                ? plan
+                : {
+                    changes: ["Changed one beat"],
+                    limitations: [],
+                    edits: [
+                      {
+                        path: "/scenes/0/beats/0/narration",
+                        valueJson: '"Divergent narration"',
+                      },
+                    ],
+                  },
+            ),
+        },
+      ),
+    /joined beat narration/,
+  );
+  assert.equal(calls, 2);
 });

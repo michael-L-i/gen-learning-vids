@@ -252,10 +252,13 @@ export const lessonPlanSchema = z.object({
 });
 
 // Derive the provider contract from the same schema used to validate imported plans.
-export const planJsonSchema = zodToJsonSchema(lessonPlanSchema, {
-  $refStrategy: "none",
-});
-delete planJsonSchema.$schema;
+export function providerJsonSchema(schema) {
+  const result = zodToJsonSchema(schema, { $refStrategy: "none" });
+  delete result.$schema;
+  strictObjects(result);
+  return result;
+}
+export const planJsonSchema = providerJsonSchema(lessonPlanSchema);
 function strictObjects(node) {
   if (!node || typeof node !== "object") return;
   if (node.type === "object") {
@@ -272,4 +275,3 @@ function strictObjects(node) {
       else strictObjects(value);
     }
 }
-strictObjects(planJsonSchema);
