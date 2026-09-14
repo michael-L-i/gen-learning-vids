@@ -82,6 +82,20 @@ For additional composable tools, read only the reference relevant to the scene:
 - [Statistics helpers](statistics.md).
 - [Algorithms helpers](algorithms.md).
 - [Molecular structures with Mol* and MolViewSpec](molecular.md).
+- [Music notation and offline sound](music.md).
+
+## Optional authored audio
+
+A scene may additionally return `exportAudio()`, called once after construction
+and before capture. Return `{sampleRate, channels: [Float32Array]}` (or a Promise)
+with one or two equally sized channels, rate 24000/44100/48000, finite samples in
+[-1, 1], and at most the measured chapter duration (up to 180 seconds). The host
+exports local PCM and mixes it with narration in the final MP4, preserving chapter
+and caption timing. Shorter audio is padded; absent `exportAudio` retains the
+existing narration-only path. Live browser playback is not recorded. Schedule
+musical examples in measured beat holds, leave room for release tails, and listen
+to the encoded result. The mixer limits combined peaks without normalizing either
+track; authors control soundtrack volume and must avoid obscuring speech.
 
 ## Quality and performance
 

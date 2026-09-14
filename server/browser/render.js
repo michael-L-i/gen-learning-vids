@@ -51,23 +51,31 @@ export async function renderBrowser(
       return {
         executable,
         packages: Object.fromEntries(
-          ["three", "animejs", "@rdkit/rdkit", "playwright", "jsxgraph", "molstar", "@dimforge/rapier3d-compat"].map(
-            (n) => [
-              n,
-              JSON.parse(
-                require("node:fs").readFileSync(
-                  path.join(
-                    fileURLToPath(
-                      new URL("../../node_modules/", import.meta.url),
-                    ),
-                    n,
-                    "package.json",
+          [
+            "three",
+            "animejs",
+            "@rdkit/rdkit",
+            "playwright",
+            "vexflow",
+            "tone",
+            "jsxgraph",
+            "molstar",
+            "@dimforge/rapier3d-compat",
+          ].map((n) => [
+            n,
+            JSON.parse(
+              require("node:fs").readFileSync(
+                path.join(
+                  fileURLToPath(
+                    new URL("../../node_modules/", import.meta.url),
                   ),
-                  "utf8",
+                  n,
+                  "package.json",
                 ),
-              ).version,
-            ],
-          ),
+                "utf8",
+              ),
+            ).version,
+          ]),
         ),
       };
     },

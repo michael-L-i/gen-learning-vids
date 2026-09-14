@@ -39,6 +39,9 @@ export async function visualCapabilities(library) {
         "@lesson-library/spatial",
         "@lesson-library/rigid-body",
         "@dimforge/rapier3d-compat",
+        "vexflow",
+        "tone",
+        "@lesson-library/music",
         "@lesson-library/physics",
         "@lesson-library/math",
         "@lesson-library/circuits",
@@ -82,6 +85,15 @@ export async function visualCapabilities(library) {
             "local Mol* and MolViewSpec structures",
             "named selections and representations",
             "atom distances and manual camera rendering",
+          ],
+        },
+        music: {
+          import: "@lesson-library/music",
+          guidance: "references/music.md",
+          features: [
+            "VexFlow notation and stable note highlights",
+            "shared timed musical events",
+            "Tone.js offline sound mixed with narration",
           ],
         },
         physics: {

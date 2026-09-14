@@ -7,6 +7,7 @@ import express from "express";
 import { build } from "esbuild";
 import { chromium } from "playwright";
 import { writeJson } from "../store.js";
+import { exportSceneAudio } from "./audio.js";
 
 const modules = fileURLToPath(new URL("../../node_modules/", import.meta.url));
 export async function renderBrowserScenes({
@@ -26,6 +27,9 @@ export async function renderBrowserScenes({
     outfile: path.join(runtime, "scene.js"),
     nodePaths: [modules],
     alias: {
+      "@lesson-library/music": fileURLToPath(
+        new URL("../music/index.js", import.meta.url),
+      ),
       "@lesson-library/constructions": fileURLToPath(
         new URL("../constructions/index.js", import.meta.url),
       ),
@@ -117,6 +121,10 @@ export async function renderBrowserScenes({
         fps: 30,
         sourceUrl: origin + "/source/",
         rdkitUrl: origin + "/runtime/",
+      });
+      const audio = await exportSceneAudio(page, {
+        duration: chapter.duration,
+        file: path.join(output, `music-${i}.wav`),
       });
       const cacheDir = path.join(output, `frames-${i}`);
       await fs.mkdir(cacheDir, { recursive: true });
@@ -230,6 +238,7 @@ export async function renderBrowserScenes({
       }
       report.scenes.push({
         index: i,
+        audio,
         previews: [...previews].flatMap(([frame, names]) =>
           names.map((name) => ({
             file: `scene-${i}-${name}.png`,
@@ -244,6 +253,11 @@ export async function renderBrowserScenes({
       await writeJson(path.join(output, "render-report.json"), report);
       await fs.rm(cacheDir, { recursive: true, force: true });
     }
+    return {
+      audioFiles: report.scenes.map((s) =>
+        s.audio ? `music-${s.index}.wav` : null,
+      ),
+    };
   } finally {
     await browser?.close();
     await new Promise((resolve) => server.close(resolve));
