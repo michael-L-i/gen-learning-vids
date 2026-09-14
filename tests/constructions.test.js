@@ -69,6 +69,7 @@ export async function buildScene(root){
  const calc=secantTangent(s,{f:x=>x*x, x:1,h:.5});
  const sum=integralApproximation(s,{f:x=>x*x,a:0,b:1,n:4});
  const eq=(a,b)=>{if(Math.abs(a-b)>1e-6)throw Error(a+' != '+b)};
+ const rejects=fn=>{let rejected=false;try{fn()}catch{rejected=true}if(!rejected)throw Error('Expected invalid state to be rejected')};
  eq(tri.midpoint.X(),2);eq(tri.foot.X(),1);eq(tri.foot.Y(),0);
  tri.setVertices([[1,1],[3,3],[1,3]]);eq(tri.midpoint.Y(),2);eq(tri.foot.X(),2);eq(tri.foot.Y(),2);
  tri.setVertices([[0,0],[4,0],[1,3]]);eq(tri.foot.X(),1);
@@ -76,6 +77,9 @@ export async function buildScene(root){
  calc.set({x:1,h:.5});eq(calc.secant.getSlope(),2.5);eq(calc.tangent.getSlope(),2);
  for(const method of ['left','right','middle','trapezoidal']) {sum.set({a:0,b:1,n:8,method});const v=sum.sample();eq(v.value,v.renderedValue);}
  sum.set({a:0,b:1,n:4,method:'left'});eq(sum.sample().renderedValue,0.21875);
+ rejects(()=>tri.setVertices([[0,0],[0,0],[1,1]]));eq(tri.foot.X(),1);
+ rejects(()=>calc.set({x:1,h:0}));eq(calc.secant.getSlope(),2.5);
+ rejects(()=>sum.set({a:0,b:1,n:0}));eq(sum.sample().renderedValue,0.21875);
  return {frameKey:t=>Math.round(t*30)%2,update(t){calc.set({x:1,h:Math.round(t*30)%2?.25:1});}};
 }`,
   );
