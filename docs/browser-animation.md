@@ -1,5 +1,8 @@
 # Browser animation capabilities
 
+Start with the [runnable first scene](../examples/first-scene/README.md), then read
+the [module catalog](../README.md#visual-tools) for the available tools.
+
 [Chemistry helpers](chemistry-animation.md) provide molecular diagrams, stable
 atom tracking and electron-flow arrows. Optional measured narration beats align
 explanatory stages with separately synthesized audio; word positions within a
@@ -35,8 +38,8 @@ executable code; this is not a security sandbox for arbitrary uploads. No HTTP
 endpoint accepts executable scene code.
 
 Each chapter uses a fresh browser page and explicit update(seconds) calls at 30
-fps. Optional exact frame keys reuse PNGs within that chapter. Reports and five
-preview frames per chapter stay in the private lesson directory. Final MP4
+fps. Optional exact frame keys reuse PNGs within that chapter. Reports, five chapter samples, and previews at each narration-beat start and
+processing hold stay in the private lesson directory. Final MP4
 validation and ready/error publication use the same rules as Blender/Matplotlib.
 
 Validation: `LEARNVID_BROWSER_TEST=1 npm run check` exercises real SVG animation,
