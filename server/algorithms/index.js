@@ -153,12 +153,13 @@ export function traceAt(trace, time, { secondsPerStep = 1 } = {}) {
   positive(secondsPerStep, "secondsPerStep");
   if (!Array.isArray(trace?.steps) || !trace.steps.length)
     throw new TypeError("trace must have steps");
-  return trace.steps[
-    Math.max(
-      0,
-      Math.min(trace.steps.length - 1, Math.floor(time / secondsPerStep)),
-    )
-  ];
+  const quotient = time / secondsPerStep,
+    nearest = Math.round(quotient);
+  // Division can place exact frame boundaries a few ULPs below an integer.
+  const tolerance = 4 * Number.EPSILON * Math.max(1, Math.abs(quotient));
+  const step =
+    Math.abs(quotient - nearest) <= tolerance ? nearest : Math.floor(quotient);
+  return trace.steps[Math.max(0, Math.min(trace.steps.length - 1, step))];
 }
 
 /** Recover a discovered node's BFS-tree path from any complete snapshot. */
