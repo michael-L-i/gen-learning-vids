@@ -86,6 +86,8 @@ For additional composable tools, read only the reference relevant to the scene:
 
 - [Geographic timelines and quantitative flows](maps-flows.md).
 
+- [Image inspection and source text annotations](inspection.md).
+
 ## Optional authored audio
 
 A scene may additionally return `exportAudio()`, called once after construction

@@ -56,6 +56,7 @@ export async function renderBrowser(
             "animejs",
             "@rdkit/rdkit",
             "playwright",
+            "openseadragon",
             "vexflow",
             "tone",
             "jsxgraph",

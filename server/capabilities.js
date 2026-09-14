@@ -42,6 +42,8 @@ export async function visualCapabilities(library) {
         "vexflow",
         "tone",
         "@lesson-library/music",
+        "openseadragon",
+        "@lesson-library/inspection",
         "@lesson-library/physics",
         "@lesson-library/math",
         "@lesson-library/circuits",
@@ -104,6 +106,15 @@ export async function visualCapabilities(library) {
             "bounded geographic projections and connectors",
             "UTC timelines",
             "acyclic quantitative flows with fixed scales",
+          ],
+        },
+        inspection: {
+          import: "@lesson-library/inspection",
+          guidance: "references/inspection.md",
+          features: [
+            "OpenSeadragon prepared local-image zoom",
+            "source-linked image region anchors",
+            "DOM Range and SVG text annotations",
           ],
         },
         physics: {
