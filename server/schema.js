@@ -1,3 +1,10 @@
+import {
+  teachingSchema,
+  reviewSchema,
+  narrationBeatSchema,
+  validateNarrationBeats,
+} from "./teaching.js";
+import { frameCount } from "./visuals.js";
 import { assetsSchema } from "./asset-schema.js";
 import { z } from "zod";
 import { animationSchema, validateAnimation } from "./animation/schema.js";
@@ -105,6 +112,16 @@ export const visualContentSchema = z.discriminatedUnion("kind", [
 ]);
 export const sceneSchema = z
   .object({
+    beats: z
+      .array(
+        narrationBeatSchema.extend({
+          visualStep: z.number().int().min(0).max(7),
+        }),
+      )
+      .min(1)
+      .max(16)
+      .nullable()
+      .default(null),
     title: z.string().min(1).max(75),
     narration: z.string().min(10).max(1600),
     visual: z.enum([
@@ -123,6 +140,35 @@ export const sceneSchema = z
     content: visualContentSchema.nullable().default(null),
   })
   .superRefine((scene, ctx) => {
+    validateNarrationBeats(scene, ctx);
+    if (scene.beats?.length) {
+      if (scene.visual === "animation")
+        ctx.addIssue({
+          code: "custom",
+          path: ["beats"],
+          message:
+            "Animation scenes use content.beats; set scene beats to null",
+        });
+      else {
+        const count = frameCount(scene);
+        const steps = scene.beats.map((b) => b.visualStep);
+        if (
+          steps[0] !== 0 ||
+          steps.at(-1) !== count - 1 ||
+          steps.some(
+            (step, i) =>
+              step >= count ||
+              (i && (step < steps[i - 1] || step > steps[i - 1] + 1)),
+          )
+        )
+          ctx.addIssue({
+            code: "custom",
+            path: ["beats"],
+            message:
+              "visualStep must start at 0, visit every reveal in order, and finish at the last visual step; repeated steps hold the current visual",
+          });
+      }
+    }
     if (
       ["animation", "equation", "code", "diagram", "plot"].includes(
         scene.visual,
@@ -184,6 +230,8 @@ export const sceneSchema = z
       });
   });
 export const lessonPlanSchema = z.object({
+  teaching: teachingSchema.nullable().default(null),
+  review: reviewSchema.nullable().default(null),
   sources: z
     .array(
       z.object({ title: z.string().min(1).max(200), url: z.string().url() }),
@@ -196,7 +244,7 @@ export const lessonPlanSchema = z.object({
   learningObjective: z.string().min(1).max(300),
   assumedKnowledge: z.array(z.string().max(200)).max(6),
   tags: z.array(z.string().max(30)).min(1).max(4),
-  scenes: z.array(sceneSchema).min(2).max(8),
+  scenes: z.array(sceneSchema).min(1).max(20),
   check: z.object({
     question: z.string().min(1).max(500),
     answer: z.string().min(1).max(1200),
@@ -215,6 +263,9 @@ function strictObjects(node) {
     node.required = Object.keys(node.properties || {});
   }
   delete node.default;
+  // Structured-output providers reject JSON Schema URI formats. Zod still
+  // validates URLs locally before any plan is accepted.
+  if (node.format === "uri") delete node.format;
   for (const value of Object.values(node))
     if (typeof value === "object") {
       if (Array.isArray(value)) value.forEach(strictObjects);

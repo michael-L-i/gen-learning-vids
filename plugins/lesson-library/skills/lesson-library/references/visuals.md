@@ -37,3 +37,11 @@ Use 1–8 nodes and up to 12 edges. Coordinates range from 0–100 inside the di
 Provide 1–3 series with 2–100 finite coordinate pairs each, in drawing order. Series names are at most 30 characters; axis labels at most 50. Include units. Derive values from the actual model or supplied data; never fabricate empirical measurements. The renderer draws line graphs, not arbitrary chart types.
 
 Equations, diagrams, processes, and code highlights reveal in evenly spaced stages across narration. Timing is approximate; do not promise word-synchronized animation. Concept and comparison layouts remain useful for introductory framing or summaries. Legacy plans without `content` continue to render.
+
+## Continuity and timing
+
+Follow [teaching guidance](teaching.md) for level, labels and processing time.
+Use [measured scene beats](lesson-format.md#measured-reveals-for-static-layouts)
+for narration-linked reveals. Evenly spaced reveals apply only to legacy plans
+without beats. Keep symbol meanings and units consistent across scenes and draw
+needed labels explicitly; authoring metadata alone is not visible to learners.

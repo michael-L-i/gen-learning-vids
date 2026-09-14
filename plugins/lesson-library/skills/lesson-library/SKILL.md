@@ -17,6 +17,8 @@ Blender is an optional external capability and defaults to disabled. Do not enab
 
 ## Create from this conversation
 
+Read [teaching guidance](references/teaching.md) before planning any lesson. It is also loaded by the engine planner. Calibrate from the question and learner evidence, plan the reasoning and visual continuity, then revise the script before rendering. Preserve the compact `teaching` plan and `review` notes in either manifest format; they remain authoring metadata.
+
 Read `learnvid profile` and use the current discussion to identify the learner's goal, demonstrated understanding, specific uncertainty, and useful examples. Distinguish evidence from assumptions; a saved note or watched video does not establish mastery. Ask a short prerequisite question only when its answer would materially change the lesson.
 
 Prefer writing the lesson plan directly, using [the lesson format](references/lesson-format.md), so the current assistant can teach from the context it already has. Save the plan and a concise context brief in a temporary private directory, then run:

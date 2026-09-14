@@ -1,3 +1,9 @@
+import {
+  teachingSchema,
+  reviewSchema,
+  narrationBeatSchema,
+  validateNarrationBeats,
+} from "../teaching.js";
 import { assetsSchema } from "../asset-schema.js";
 import { prepareAssets, assetCredits } from "../assets.js";
 import fs from "node:fs/promises";
@@ -11,6 +17,8 @@ import { captions, clock } from "../render.js";
 import { narrateAuthoredScene } from "./narration.js";
 
 export const authoredManifest = z.object({
+  teaching: teachingSchema.nullable().default(null),
+  review: reviewSchema.nullable().default(null),
   files: z.array(z.string().min(1).max(1000)).max(100).default([]),
   assets: assetsSchema,
   brief: z.string().max(10000).default(""),
@@ -34,36 +42,9 @@ export const authoredManifest = z.object({
           narration: z.string().min(1).max(1800),
           takeaway: z.string().max(250).optional(),
           seconds: z.number().min(1).max(120),
-          beats: z
-            .array(
-              z.object({
-                id: z
-                  .string()
-                  .regex(/^[a-zA-Z][a-zA-Z0-9_-]*$/)
-                  .max(60),
-                narration: z.string().trim().min(1).max(1800),
-                pauseAfter: z.number().min(0).max(10).default(0.4),
-              }),
-            )
-            .min(1)
-            .max(16)
-            .optional(),
+          beats: z.array(narrationBeatSchema).min(1).max(16).optional(),
         })
-        .superRefine((scene, ctx) => {
-          if (!scene.beats) return;
-          if (new Set(scene.beats.map((b) => b.id)).size !== scene.beats.length)
-            ctx.addIssue({
-              code: "custom",
-              path: ["beats"],
-              message: "Narration beat IDs must be unique within a chapter",
-            });
-          if (scene.beats.map((b) => b.narration).join(" ") !== scene.narration)
-            ctx.addIssue({
-              code: "custom",
-              path: ["narration"],
-              message: "Chapter narration must equal the joined beat narration",
-            });
-        }),
+        .superRefine(validateNarrationBeats),
     )
     .min(1)
     .max(20),

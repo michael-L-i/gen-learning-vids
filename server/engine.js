@@ -107,6 +107,7 @@ export async function runJob(
           lesson.request,
           lesson.context,
           lesson.settings,
+          { progress: (stage, progress) => update({ stage, progress }) },
         );
         await update(lessonPlanSchema.parse(plan));
       }
