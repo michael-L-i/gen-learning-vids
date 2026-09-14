@@ -36,6 +36,17 @@ export async function visualCapabilities(library) {
         "d3-geo",
         "@lesson-library/math",
       ],
+      modules: {
+        math: {
+          import: "@lesson-library/math",
+          guidance: "references/math.md",
+          features: [
+            "2D linear maps",
+            "basis and grid geometry",
+            "determinant and area",
+          ],
+        },
+      },
       description:
         "Freely authored 2D, spatial 3D, molecular diagrams; choose per scene",
       command: "learnvid render-browser DIRECTORY",

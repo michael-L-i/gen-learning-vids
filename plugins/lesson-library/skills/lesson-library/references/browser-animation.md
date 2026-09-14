@@ -113,4 +113,4 @@ render time separately from authoring, TTS and first-use downloads.
 For 2D linear maps, `@lesson-library/math` supplies stable grid/point identities,
 transformed basis vectors and unit-cell geometry, matrix composition and
 interpolation, and signed determinant/area measurements. See
-[linear transformations](math-animation.md) for coordinate conventions and limits.
+[linear transformations](math.md) for coordinate conventions and limits.
