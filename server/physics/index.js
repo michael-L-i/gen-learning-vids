@@ -21,7 +21,7 @@ const esc = (s) =>
         c
       ],
   );
-const fmt = (n) => Number(n.toFixed(5));
+const fmt = (n) => Number(finite(n, "SVG coordinate").toFixed(5));
 const path = (points) =>
   points.map((p, i) => `${i ? "L" : "M"}${p.map(fmt).join(" ")}`).join(" ");
 const strokePath = (points, stroke, width, extra = "") =>
@@ -37,19 +37,24 @@ export function harmonicOscillator({
   positive(stiffness, "stiffness");
   finite(position, "position");
   finite(velocity, "velocity");
-  const omega = Math.sqrt(stiffness / mass);
+  const omega = positive(
+    Math.sqrt(stiffness / mass),
+    "derived angular frequency",
+  );
+  const period = positive((2 * Math.PI) / omega, "derived period");
   return Object.freeze({
     omega,
-    period: (2 * Math.PI) / omega,
+    period,
     at(t) {
       finite(t, "time");
+      finite(omega * t, "derived phase");
       const x =
         position * Math.cos(omega * t) +
         (velocity / omega) * Math.sin(omega * t);
       const v =
         -position * omega * Math.sin(omega * t) +
         velocity * Math.cos(omega * t);
-      return {
+      const state = {
         t,
         x,
         v,
@@ -58,6 +63,9 @@ export function harmonicOscillator({
         kinetic: 0.5 * mass * v * v,
         potential: 0.5 * stiffness * x * x,
       };
+      for (const [name, value] of Object.entries(state))
+        finite(value, `derived ${name}`);
+      return state;
     },
   });
 }
@@ -75,8 +83,14 @@ export function constantAcceleration({
       finite(t, "time");
       return {
         t,
-        position: p.map((x, i) => x + v[i] * t + 0.5 * a[i] * t * t),
-        velocity: v.map((x, i) => x + a[i] * t),
+        position: point(
+          p.map((x, i) => x + v[i] * t + 0.5 * a[i] * t * t),
+          "derived position",
+        ),
+        velocity: point(
+          v.map((x, i) => x + a[i] * t),
+          "derived velocity",
+        ),
         acceleration: [...a],
       };
     },
@@ -89,11 +103,11 @@ export function cartesianFrame({ origin = [0, 0], scale = 1 } = {}) {
   return Object.freeze({
     point(p) {
       const [x, y] = point(p);
-      return [o[0] + scale * x, o[1] - scale * y];
+      return point([o[0] + scale * x, o[1] - scale * y], "screen position");
     },
     vector(p) {
       const [x, y] = point(p);
-      return [scale * x, -scale * y];
+      return point([scale * x, -scale * y], "screen vector");
     },
   });
 }
@@ -255,7 +269,8 @@ export function vectorArrow({
     dy = v[1] * scale,
     l = Math.hypot(dx, dy);
   positive(strokeWidth, "stroke width");
-  const to = [a[0] + dx, a[1] + dy];
+  finite(l, "derived arrow length");
+  const to = point([a[0] + dx, a[1] + dy], "arrow endpoint");
   if (l < 1e-9) return { from: [...a], to, svg: "" };
   const h = Math.min(head, l * 0.6),
     ux = dx / l,
@@ -301,12 +316,13 @@ export function sampleState(model, { start = 0, end, samples = 241 }) {
   finite(start, "start");
   finite(end, "end");
   if (end <= start) throw new Error("end must exceed start");
+  finite(end - start, "sample time span");
   if (!Number.isInteger(samples) || samples < 2 || samples > 100000)
     throw new Error("samples must be an integer from 2 to 100000");
   if (typeof model?.at !== "function")
     throw new Error("model must expose at(time)");
   return Array.from({ length: samples }, (_, i) =>
-    model.at(start + ((end - start) * i) / (samples - 1)),
+    model.at(start + (end - start) * (i / (samples - 1))),
   );
 }
 
@@ -336,21 +352,29 @@ export function linkedGraph({
       "graph value",
     );
   const coords = states.map((s) => [get(s, x), get(s, y)]);
-  const map = ([px, py]) => [
-    b.x + ((px - xd[0]) / (xd[1] - xd[0])) * b.width,
-    b.y + b.height - ((py - yd[0]) / (yd[1] - yd[0])) * b.height,
-  ];
-  if (
-    coords.some(
-      (p) =>
-        p[0] < xd[0] - 1e-10 ||
-        p[0] > xd[1] + 1e-10 ||
-        p[1] < yd[0] - 1e-10 ||
-        p[1] > yd[1] + 1e-10,
-    )
-  )
-    throw new Error("graph samples lie outside explicit domains");
-  const axisX = map([0, Math.max(yd[0], Math.min(0, yd[1]))])[1];
+  const contain = (value, d) => {
+    const tolerance =
+      16 *
+      Number.EPSILON *
+      Math.max(Math.abs(d[0]), Math.abs(d[1]), d[1] - d[0]);
+    finite(value, "graph coordinate");
+    if (value < d[0] - tolerance || value > d[1] + tolerance)
+      throw new Error("graph value lies outside explicit domains");
+    return Math.max(d[0], Math.min(d[1], value));
+  };
+  const map = (p) => {
+    const [px, py] = point(p, "graph point");
+    return point(
+      [
+        b.x + ((contain(px, xd) - xd[0]) / (xd[1] - xd[0])) * b.width,
+        b.y +
+          b.height -
+          ((contain(py, yd) - yd[0]) / (yd[1] - yd[0])) * b.height,
+      ],
+      "mapped graph point",
+    );
+  };
+  const axisX = map([xd[0], Math.max(yd[0], Math.min(0, yd[1]))])[1];
   let svg =
     strokePath(
       [
@@ -373,8 +397,6 @@ export function linkedGraph({
   let marker = null;
   if (cursor) {
     const p = [get(cursor, x), get(cursor, y)];
-    if (p[0] < xd[0] || p[0] > xd[1] || p[1] < yd[0] || p[1] > yd[1])
-      throw new Error("cursor lies outside graph domains");
     marker = map(p);
     svg +=
       strokePath(
@@ -394,6 +416,7 @@ export function linkedGraph({
 function domain(d, name) {
   const p = point(d, name);
   if (p[1] <= p[0]) throw new Error(`${name} must increase`);
+  finite(p[1] - p[0], `${name} span`);
   return p;
 }
 function rect(r) {
@@ -402,6 +425,8 @@ function rect(r) {
   finite(r.y, "y");
   positive(r.width, "width");
   positive(r.height, "height");
+  finite(r.x + r.width, "rectangle right edge");
+  finite(r.y + r.height, "rectangle bottom edge");
   return { ...r };
 }
 const intersects = (a, b, gap = 0) =>

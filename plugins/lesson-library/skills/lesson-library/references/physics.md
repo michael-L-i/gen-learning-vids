@@ -15,6 +15,7 @@ results do not select the right physical model for the problem.
 `constantAcceleration({position:[x,y], velocity:[vx,vy], acceleration:[ax,ay]})`
 returns `at(t)` with position, velocity and acceleration arrays. It is free motion
 only: the author must determine and stop at contacts or switch to another model.
+Nonrepresentable derived frequencies, states and graph spans fail explicitly.
 Both models accept finite physical times, including negative times as mathematical
 continuations. Keep the lesson inside its stated physical domain.
 

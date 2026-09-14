@@ -186,3 +186,72 @@ test("label placement avoids measured obstacles and explicitly reports no availa
     /unique/,
   );
 });
+
+test("tiny graph domains reject out-of-range samples and cursors identically", () => {
+  const opts = {
+    y: "v",
+    box: { x: 0, y: 0, width: 100, height: 100 },
+    xDomain: [0, 1],
+    yDomain: [0, 1e-12],
+  };
+  assert.throws(
+    () =>
+      linkedGraph({
+        ...opts,
+        states: [
+          { t: 0, v: 0 },
+          { t: 1, v: 5e-11 },
+        ],
+      }),
+    /outside/,
+  );
+  assert.throws(
+    () =>
+      linkedGraph({
+        ...opts,
+        states: [
+          { t: 0, v: 0 },
+          { t: 1, v: 1e-12 },
+        ],
+        cursor: { t: 1, v: 5e-11 },
+      }),
+    /outside/,
+  );
+  const almost = 1e-12 * (1 + Number.EPSILON),
+    g = linkedGraph({
+      ...opts,
+      states: [
+        { t: 0, v: 0 },
+        { t: 1, v: almost },
+      ],
+      cursor: { t: 1, v: almost },
+    });
+  assert.deepEqual(g.marker, [100, 0]);
+  assert.match(g.svg, /L100 0/);
+});
+test("unrepresentable derived motion and vector outputs fail explicitly", () => {
+  for (const [mass, stiffness] of [
+    [1e-300, 1e300],
+    [1e300, 1e-300],
+  ])
+    assert.throws(
+      () => harmonicOscillator({ mass, stiffness, position: 1 }),
+      /derived/,
+    );
+  assert.throws(
+    () => harmonicOscillator({ mass: 1, stiffness: 4, position: 1 }).at(1e308),
+    /derived phase/,
+  );
+  assert.throws(
+    () => constantAcceleration({ acceleration: [1, 0] }).at(1e200),
+    /derived position/,
+  );
+  assert.throws(
+    () => vectorArrow({ from: [0, 0], vector: [1e308, 0], scale: 2 }),
+    /derived arrow/,
+  );
+  assert.throws(
+    () => cartesianFrame({ scale: 2 }).point([1e308, 0]),
+    /screen position/,
+  );
+});
