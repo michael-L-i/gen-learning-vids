@@ -15,6 +15,10 @@ const state = model.sample(interpolate2D(IDENTITY_2D, [[2, 1], [0, 1]], progress
 // Draw state.lines, state.basis, state.unitCell, and state.points.
 ```
 
+Display matrices with aligned rows and columns inside full-height brackets, using
+SVG layout or mathematical typesetting such as MathJax `bmatrix`. Array syntax and
+semicolon-separated rows are data notation, not the on-screen matrix layout.
+
 Matrices are rows `[[a,b],[c,d]]` and act on column vectors: `(x,y)` maps to
 `(a*x+b*y,c*x+d*y)`. Coordinates are mathematical, with y up; convert them to
 screen coordinates consistently. `basis` contains transformed e1 and e2 endpoints;
