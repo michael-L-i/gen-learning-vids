@@ -33,11 +33,15 @@ already know. Avoid narrating algebra while silently changing the underlying mod
 
 ## Keep the learner oriented
 
-When the explanation has several stages, establish a compact route and indicate
-the current subgoal. Preserve the relevant diagram, givens, previous result or
-comparison state through a transition. Highlight the change; avoid replacing
-everything the learner needs to remember. Use recaps to reconnect dependencies,
-not repeat every sentence.
+Make the question clear before solving it: what is given, what is happening, and
+what the learner is trying to find. Show essential conditions on the relevant
+objects. Familiar subject vocabulary does not replace a clear problem statement.
+
+Let the content provide orientation. Preserve the relevant diagram, givens,
+previous result or comparison state through a transition and highlight the change.
+An opening agenda can help a long explanation, but is optional. Do not default to
+numbered footers, frame counters, or a persistent route through every stage. Use
+brief subgoal cues or recaps only where they help reconnect the reasoning.
 
 Introduce symbols at first use with their meaning and units when applicable.
 Keep names, colors, coordinate conventions and object identities consistent.
@@ -46,6 +50,13 @@ does not tell the learner what its variables represent in this particular proble
 Retain a compact legend where referring back is necessary. Reveal an equation,
 structure or diagram feature when its narration begins, and keep it available
 while explaining it. Avoid showing the answer before a prediction opportunity.
+
+When motion or change is central to the question, animate that behavior to make
+the reasoning visible. Give the learner time to watch; replay, pause, trace paths,
+or compare states when useful. Moving labels should stay attached to their objects.
+Connect the visible change to the quantities being discussed, rather than adding
+decorative motion around equations. Keep physical time, trajectories and constraints
+consistent; identify slow motion or schematic views when they could mislead.
 
 ## Pace changes, not just speech
 
@@ -66,6 +77,8 @@ especially whether needed labels survive and whether the next answer appears ear
 Read the draft as this learner, following both speech and planned visual states.
 Remove unnecessary prerequisite explanations. Repair any transition that relies
 on an unstated inference, undefined symbol, vanished result or ambiguous pointer.
+Check that the viewer can state the problem and follow what changes on screen;
+a labeled still diagram alone may not explain the motion under discussion.
 Give the hardest reasoning appropriate time, and check that the final question
 tests the objective without revealing its answer prematurely. Revise actual
 content and timing; a positive review label is not evidence of quality.

@@ -83,6 +83,10 @@ establishes physical correctness. Distinguish schematic models, measured models,
 and calculated simulation. Keep DOM/SVG labels above the canvas for crisp text.
 Check clipping, contrast, label collisions, pointer endpoints, camera angles and
 whether motion actually explains the narration.
+For a motion problem, drive positions and associated vectors from the same
+physical model and time value. Distinguish simulation time from narration time;
+make pauses and replays legible. Inspect intermediate moving frames as well as
+beat boundaries, including collisions and other conditions that end the motion.
 
 Optional `frameKey(seconds)` may return a JSON-serializable key. Identical keys
 MUST mean identical complete pixels, including labels and camera. A cached frame
