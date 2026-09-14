@@ -129,8 +129,17 @@ export function geographicMap({
       [padding, padding],
       [width - padding, height - padding],
     ]);
-  projection.clipExtent([projection([w, n]), projection([e, s])]);
-  const path = geoPath(projection);
+  positive(projection.scale(), "projection scale");
+  const clip = [projection([w, n]), projection([e, s])];
+  clip.flat().forEach((v) => finite(v, "projected bound"));
+  projection.clipExtent(clip);
+  const d3Path = geoPath(projection);
+  const path = (g) => {
+    const value = d3Path(g);
+    if (value && /NaN|Infinity/.test(value))
+      throw new RangeError("Geometry projection produced a nonfinite path");
+    return value;
+  };
   const point = (p) => {
     const q = coordinate(p);
     if (q[0] < w || q[0] > e || q[1] < s || q[1] > n) return null;
@@ -213,6 +222,7 @@ export function utcTimeline({ domain, duration, range = [0, 1] }) {
     range[0] >= range[1]
   )
     throw new RangeError("range must increase");
+  finite(range[1] - range[0], "range span");
   const scale = scaleUtc().domain([a, b]).range(range).clamp(true);
   const atTime = (value) => {
     const ms = Math.max(a, Math.min(b, timestamp(value)));
@@ -220,7 +230,7 @@ export function utcTimeline({ domain, duration, range = [0, 1] }) {
       timestamp: ms,
       iso: new Date(ms).toISOString(),
       progress: (ms - a) / (b - a),
-      x: scale(ms),
+      x: finite(scale(ms), "timeline coordinate"),
     };
   };
   return {
