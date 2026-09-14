@@ -1,0 +1,73 @@
+{
+  "title": "Double the width, double the area",
+  "summary": "A rectangle widens while its height stays fixed. Labels and an added strip connect the motion to its area.",
+  "learningObjective": "Explain why doubling a rectangle’s width at fixed height doubles its area.",
+  "assumedKnowledge": ["Can multiply small whole numbers."],
+  "tags": ["math", "geometry"],
+  "sources": [],
+  "files": [],
+  "check": {
+    "question": "At the same height, what happens to the area if the original width is tripled?",
+    "answer": "The area triples: three equal strips fit beside one another."
+  },
+  "teaching": {
+    "learner": {
+      "established": [],
+      "assumed": ["Can multiply small whole numbers."],
+      "uncertain": ["May not connect multiplication to a changing rectangle."]
+    },
+    "focus": "Connect a width change to the additional equal area.",
+    "skip": ["A survey of area formulas"],
+    "approach": "Keep the original rectangle visible and add one equal strip.",
+    "pacing": "Explain the original dimensions, animate during the width change, then hold the comparison.",
+    "symbols": [
+      {
+        "symbol": "w",
+        "meaning": "width",
+        "unit": "cm"
+      },
+      {
+        "symbol": "h",
+        "meaning": "height",
+        "unit": "cm"
+      },
+      {
+        "symbol": "A",
+        "meaning": "area",
+        "unit": "cm²"
+      }
+    ]
+  },
+  "review": {
+    "changes": [
+      "Preserved the original rectangle and fixed height throughout the widening."
+    ],
+    "limitations": [
+      "Diagram lengths are schematic; voice and duration vary with speech settings."
+    ]
+  },
+  "scenes": [
+    {
+      "title": "Change one dimension",
+      "seconds": 1,
+      "beats": [
+        {
+          "id": "start",
+          "narration": "This rectangle is three centimeters wide and two centimeters high. Its area is six square centimeters.",
+          "pauseAfter": 1
+        },
+        {
+          "id": "widen",
+          "narration": "Keep the height fixed and double the width. Watch the added strip: it has the same area as the original rectangle.",
+          "pauseAfter": 1.5
+        },
+        {
+          "id": "compare",
+          "narration": "The width is now six centimeters. The area is twelve square centimeters. Doubling just the width doubles the area.",
+          "pauseAfter": 2
+        }
+      ],
+      "narration": "This rectangle is three centimeters wide and two centimeters high. Its area is six square centimeters. Keep the height fixed and double the width. Watch the added strip: it has the same area as the original rectangle. The width is now six centimeters. The area is twelve square centimeters. Doubling just the width doubles the area."
+    }
+  ]
+}
