@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "A personal video learning library, powered by your local coding agent.",
+  "description": "An open-source engine for AI-assisted educational videos, scientific animation, and narrated lessons with a local video library.",
   "bin": {
     "learnvid": "./bin/learnvid.js"
   },
@@ -99,5 +99,23 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/michael-L-i/gen-learning-vids.git"
+  },
+  "keywords": [
+    "education",
+    "educational-videos",
+    "video-generation",
+    "scientific-visualization",
+    "animation",
+    "stem",
+    "text-to-speech",
+    "codex",
+    "claude-code",
+    "threejs",
+    "molecular-visualization",
+    "learning-tools"
+  ],
+  "homepage": "https://github.com/michael-L-i/gen-learning-vids#readme",
+  "bugs": {
+    "url": "https://github.com/michael-L-i/gen-learning-vids/issues"
   }
 }

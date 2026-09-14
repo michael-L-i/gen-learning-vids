@@ -1,6 +1,6 @@
 # Lesson Library
 
-Create narrated video lessons with diagrams, equations, simulations, and source material. A coding agent can author scenes from your conversation; the app keeps the videos, transcripts, and follow-up questions in one local library.
+An open-source engine for AI-assisted educational videos and scientific animation. Create narrated lessons with diagrams, equations, simulations, and source material. Codex or Claude can author scenes from your conversation; the app keeps videos, transcripts, and follow-up questions in a local library.
 
 ![An animated zoom from folded crambin into the Cys3–Cys40 disulfide bond, with labeled sulfur atoms and their measured separation.](docs/assets/disulfide-zoom.gif)
 
