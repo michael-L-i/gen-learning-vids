@@ -109,3 +109,9 @@ answer or a label disappearing at a transition. Play the final MP4.
 The shared pipeline validates dimensions, frame rate, audio and decode, but does
 not certify scientific content or native browser label layout. Report actual
 render time separately from authoring, TTS and first-use downloads.
+
+For graph-search explanations, import `@lesson-library/algorithms` for immutable
+breadth-first traces and stable-ID graph/queue geometry. Read
+[algorithm traces](algorithms.md) for event semantics, tie-breaking, resource
+limits, and narration-driven playback. This is a data-driven trace engine, not
+execution of arbitrary learner-supplied code or a fixed lesson template.
