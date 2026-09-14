@@ -40,8 +40,18 @@ export async function visualCapabilities(library) {
         "@lesson-library/waves",
         "@lesson-library/statistics",
         "@lesson-library/algorithms",
+        "@lesson-library/maps-flows",
       ],
       modules: {
+        "maps-flows": {
+          import: "@lesson-library/maps-flows",
+          guidance: "references/maps-flows.md",
+          features: [
+            "bounded geographic projections and connectors",
+            "UTC timelines",
+            "acyclic quantitative flows with fixed scales",
+          ],
+        },
         physics: {
           import: "@lesson-library/physics",
           guidance: "references/physics.md",
