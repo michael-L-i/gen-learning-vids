@@ -72,6 +72,8 @@ chemical correctness. Use measured beats and review every chemical change.
 
 For additional composable tools, read only the reference relevant to the scene:
 
+- [Spatial cutaways and exploded views](spatial.md).
+- [Rapier rigid-body playback](rigid-body.md).
 - [Physics helpers](physics.md).
 - [Math helpers](math.md).
 - [Circuits helpers](circuits.md).

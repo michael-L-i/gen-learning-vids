@@ -34,6 +34,8 @@ export async function visualCapabilities(library) {
         "three",
         "@rdkit/rdkit",
         "d3-geo",
+        "@lesson-library/spatial",
+        "@lesson-library/rigid-body",
         "@lesson-library/physics",
         "@lesson-library/math",
         "@lesson-library/circuits",
@@ -42,6 +44,23 @@ export async function visualCapabilities(library) {
         "@lesson-library/algorithms",
       ],
       modules: {
+        spatial: {
+          import: "@lesson-library/spatial",
+          guidance: "references/spatial.md",
+          features: [
+            "Three.js convex cutaways with caps and outlines",
+            "absolute exploded assembly views",
+          ],
+        },
+        rigidBody: {
+          import: "@lesson-library/rigid-body",
+          guidance: "references/rigid-body.md",
+          features: [
+            "Rapier rigid-body collisions and passive joints",
+            "deterministic fixed-tick playback",
+            "synchronized pose, velocity and energy samples",
+          ],
+        },
         physics: {
           import: "@lesson-library/physics",
           guidance: "references/physics.md",
