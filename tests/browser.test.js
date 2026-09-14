@@ -108,6 +108,13 @@ test("browser renders SVG, Anime.js, RDKit WASM and Three.js into shared, timed 
   const report = JSON.parse(
     await fs.readFile(path.join(work, "render-report.json")),
   );
+  assert.ok(
+    report.scenes[1].previews.some(
+      (p) => p.file === "scene-1-beat-stop-start.png" && p.seconds === 0.3,
+    ),
+  );
+  await fs.access(path.join(work, "scene-1-beat-rotate-hold.png"));
+  await fs.access(path.join(work, "scene-0-0.5.png"));
   for (const scene of report.scenes) {
     assert.equal(scene.frames, 30);
     assert.equal(scene.rendered, 2);

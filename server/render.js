@@ -1,3 +1,4 @@
+import { narrateAuthoredScene } from "./authored/narration.js";
 import { prepareAssets, assetCredits } from "./assets.js";
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -78,6 +79,26 @@ export function captions(scenes) {
   }
   return "WEBVTT\n\n" + cues.join("\n\n") + "\n";
 }
+// Static states hold until the next measured beat. Repeated steps can explain
+// a result without revealing additional material.
+export function revealTimeline(scene, timing) {
+  if (timing.beats?.length)
+    return timing.beats.map((beat, index) => ({
+      step: beat.visualStep,
+      start: beat.start,
+      duration:
+        index === timing.beats.length - 1
+          ? timing.duration - beat.start
+          : beat.duration,
+    }));
+  const count = frameCount(scene);
+  return Array.from({ length: count }, (_, step) => ({
+    step,
+    start: (timing.duration * step) / count,
+    duration: timing.duration / count,
+  }));
+}
+
 export async function renderLesson(
   library,
   lesson,
@@ -143,7 +164,10 @@ export async function renderLesson(
         ...scene,
         start,
         duration: result.duration,
-        cues: result.timeline,
+        cues: result.timeline.map((beat) => ({
+          ...beat,
+          duration: beat.spoken ?? beat.duration,
+        })),
       });
       start += result.duration;
       continue;
@@ -154,35 +178,48 @@ export async function renderLesson(
     );
     const audio = path.join(render, `scene-${i}.wav`);
     const clip = path.join(render, `scene-${i}.mp4`);
-    await synthesize(scene.narration, audio, settings, {
-      cacheDir: path.join(library.root, ".models", "kokoro"),
-    });
-    const { stdout } = await run("ffprobe", [
-      "-v",
-      "error",
-      "-show_entries",
-      "format=duration",
-      "-of",
-      "default=noprint_wrappers=1:nokey=1",
-      audio,
-    ]);
-    const duration = Number(stdout.trim());
-    if (!Number.isFinite(duration) || duration <= 0)
-      throw new Error("The speech engine produced empty audio.");
-    const count = frameCount(scene);
+    let timing;
+    if (scene.beats?.length) {
+      timing = await narrateAuthoredScene({
+        scene: { ...scene, seconds: 0 },
+        output: audio,
+        settings,
+        synthesize,
+        cacheDir: path.join(library.root, ".models", "kokoro"),
+      });
+    } else {
+      await synthesize(scene.narration, audio, settings, {
+        cacheDir: path.join(library.root, ".models", "kokoro"),
+      });
+      const { stdout } = await run("ffprobe", [
+        "-v",
+        "error",
+        "-show_entries",
+        "format=duration",
+        "-of",
+        "default=noprint_wrappers=1:nokey=1",
+        audio,
+      ]);
+      const duration = Number(stdout.trim());
+      if (!Number.isFinite(duration) || duration <= 0)
+        throw new Error("The speech engine produced empty audio.");
+      timing = { duration };
+    }
+    const { duration } = timing;
+    const reveals = revealTimeline(scene, timing);
     const frames = [];
-    for (let step = 0; step < count; step++) {
-      const name = `scene-${i}-${step}.png`;
+    for (const [frame, reveal] of reveals.entries()) {
+      const name = `scene-${i}-${frame}.png`;
       await sharp(
         Buffer.from(
-          sceneSvg(scene, i, lesson.scenes.length, lesson.style, step),
+          sceneSvg(scene, i, lesson.scenes.length, lesson.style, reveal.step),
         ),
       )
         .png()
         .toFile(path.join(render, name));
-      frames.push(`file '${name}'\nduration ${duration / count}`);
+      frames.push(`file '${name}'\nduration ${reveal.duration}`);
     }
-    frames.push(`file 'scene-${i}-${count - 1}.png'`);
+    frames.push(`file 'scene-${i}-${reveals.length - 1}.png'`);
     const frameList = path.join(render, `frames-${i}.txt`);
     await atomicWrite(frameList, frames.join("\n"));
     await progress(
@@ -222,7 +259,7 @@ export async function renderLesson(
       String(duration),
       clip,
     ]);
-    scenes.push({ ...scene, start, duration });
+    scenes.push({ ...scene, ...timing, reveals, start, duration });
     start += duration;
   }
   await progress("Putting your lesson together", 92);

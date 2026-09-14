@@ -294,7 +294,8 @@ export async function renderAnimation({
   const prepared = await prepareAnimation(scene.content, { assets }),
     a = prepared.animation;
   await fs.mkdir(dir, { recursive: true });
-  const durations = [];
+  const durations = [],
+    spokenDurations = [];
   for (let i = 0; i < a.beats.length; i++) {
     const audio = path.join(dir, `speech-${i}.wav`);
     await synthesize(a.beats[i].narration, audio, settings, { cacheDir });
@@ -311,8 +312,12 @@ export async function renderAnimation({
     if (!Number.isFinite(spoken) || spoken <= 0)
       throw new Error("Speech engine produced empty audio.");
     const duration =
-      Math.ceil(Math.max(a.beats[i].seconds, spoken) * fps) / fps;
+      Math.ceil(
+        Math.max(a.beats[i].seconds, spoken + (a.beats[i].pauseAfter || 0)) *
+          fps,
+      ) / fps;
     durations.push(duration);
+    spokenDurations.push(spoken);
     await run("ffmpeg", [
       "-y",
       "-v",
@@ -330,7 +335,10 @@ export async function renderAnimation({
       path.join(dir, `beat-${i}.wav`),
     ]);
   }
-  const timeline = beatTimeline(a, durations),
+  const timeline = beatTimeline(a, durations).map((beat, i) => ({
+      ...beat,
+      spoken: spokenDurations[i],
+    })),
     duration = durations.reduce((a, b) => a + b, 0);
   await atomicWrite(
     path.join(dir, "audio.txt"),

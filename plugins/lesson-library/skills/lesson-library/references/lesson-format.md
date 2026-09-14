@@ -1,6 +1,6 @@
 # Lesson plan format
 
-Write a JSON object with these fields. All fields are required. The CLI validates the document before rendering; an invalid document produces an actionable error.
+Write a JSON object with these fields. The fields shown below are required. Optional authoring and timing fields follow. The CLI validates the document before rendering; an invalid document produces an actionable error.
 
 ```json
 {
@@ -25,13 +25,49 @@ Write a JSON object with these fields. All fields are required. The CLI validate
 }
 ```
 
-Include **2–8 scenes** (the shape example above shows one to avoid repetition). Usually use 4–6 scenes and 350–600 spoken words total. Honor the user's requested scope rather than padding a simple explanation.
+Include **1–20 scenes**. Choose scope and reasoning steps before duration; there is no fixed word budget or target scene count. Read [teaching guidance](teaching.md) before drafting.
 
 Basic visuals:
 - `concept`: key ideas on separate panels.
 - `steps`: numbered steps in a sequence.
 - `comparison`: two panels when there are two points; more points use stacked panels.
 
-For equations, code, diagrams, and plots, use the structured content formats in [subject-specific visuals](visuals.md). Choose representations scene by scene rather than repeating a single template. The renderer supports progressive reveals, not arbitrary animations. Do not describe movement, code execution, or diagrams that the renderer cannot display. On-screen points should be concise; put the richer explanation in narration. Narration becomes both the audio and transcript. Captions use approximate timing from speech length.
+For equations, code, diagrams, and plots, use the structured content formats in [subject-specific visuals](visuals.md). Choose representations scene by scene rather than repeating a single template. Structured animation supports measured beats and tracks; freely authored motion uses [browser animation](browser-animation.md). Do not describe movement, code execution, or diagrams that the renderer cannot display. On-screen points should be concise; put the richer explanation in narration. Narration becomes both the audio and transcript. Captions follow measured beats when supplied; word positions within a beat remain approximate.
 
-Use concrete examples and resolve the learner's actual confusion. Avoid placing large equations, Markdown, tables, or code blocks in on-screen strings. Don't use unsupported source citations; name sources in the context brief when supplied.
+Use concrete examples and resolve the learner's actual confusion. Avoid placing large equations, Markdown, tables, or code blocks in on-screen strings. Use optional `sources: [{title,url}]` for verified references. Do not invent citations.
+
+## Teaching and revision metadata
+
+Both structured and authored manifests accept optional `teaching` and `review`
+(null or omitted for older plans). Populate these for newly authored lessons:
+
+- `teaching.learner`: `{established, assumed, uncertain}`, arrays of concise strings.
+- `teaching.focus`: the specific gap this lesson addresses.
+- `teaching.skip`: an array of prerequisites that do not need a refresher.
+- `teaching.approach`: why this sequence bridges the gap.
+- `teaching.pacing`: where to spend processing time and what can be brisk.
+- `teaching.symbols`: `[{symbol,meaning,unit}]`; empty when irrelevant, empty unit
+  for dimensionless quantities. This authoring ledger does not draw labels:
+  explicitly put needed meanings and units in the visual and narration.
+- `review`: `{changes: string[], limitations: string[]}` recording the focused
+  revision and unresolved assumptions, not a claim of automatic certification.
+
+## Measured reveals for static layouts
+
+New non-animation scenes should include `beats`, each
+`{id,narration,pauseAfter,visualStep}`. IDs start with a letter and are unique per
+scene. Chapter narration must exactly equal beat narrations joined with spaces.
+Use 1–16 beats; `pauseAfter` is 0–10 seconds, default 0.4.
+
+`visualStep` is zero-based: an equation step, diagram node, code highlight, or
+numbered point in a steps layout. Concept, comparison and plot layouts have only
+step 0. Begin at 0, visit every step in order, and end at the last step. Repeating
+a step holds that state for further explanation. The renderer speaks each beat,
+measures its duration, then reveals the next state at the next beat boundary.
+Earlier equation steps and diagram nodes remain visible. Code steps change the
+highlight; the code stays visible. Use a new beat when a reveal must coincide
+with narration; do not estimate word timestamps.
+
+For `visual="animation"`, set scene `beats` to null and use `content.beats` with
+tracks instead. Those beats accept `pauseAfter` as well as minimum `seconds`.
+Older static plans with omitted/null beats retain approximate even reveals.

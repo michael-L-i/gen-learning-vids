@@ -54,6 +54,7 @@ test("invalid diagrams, oversized code, mismatched content, and unsafe TeX fail 
 test("provider JSON schema requires all fields and legacy plans remain valid", async () => {
   function visit(node) {
     if (!node || typeof node !== "object") return;
+    assert.notEqual(node.format, "uri");
     if (node.type === "object") {
       assert.equal(node.additionalProperties, false);
       assert.deepEqual(node.required, Object.keys(node.properties));

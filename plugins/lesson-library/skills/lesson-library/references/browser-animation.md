@@ -83,6 +83,10 @@ establishes physical correctness. Distinguish schematic models, measured models,
 and calculated simulation. Keep DOM/SVG labels above the canvas for crisp text.
 Check clipping, contrast, label collisions, pointer endpoints, camera angles and
 whether motion actually explains the narration.
+For a motion problem, drive positions and associated vectors from the same
+physical model and time value. Distinguish simulation time from narration time;
+make pauses and replays legible. Inspect intermediate moving frames as well as
+beat boundaries, including collisions and other conditions that end the motion.
 
 Optional `frameKey(seconds)` may return a JSON-serializable key. Identical keys
 MUST mean identical complete pixels, including labels and camera. A cached frame
@@ -97,7 +101,11 @@ FFmpeg/FFprobe are still required by the shared encoder. Downloading Chromium
 is not the same as having no binary dependencies. For redistribution, verify the
 packaged runtime on each target platform; macOS is currently tested.
 
-Inspect the PNG previews at five points in each chapter and play the final MP4.
+Inspect the PNG previews at five points in each chapter, plus the generated
+`scene-N-beat-ID-start.png` and `scene-N-beat-ID-hold.png` images. The render
+report lists their exact chapter-relative times. These capture the introduction
+and processing hold for each beat; coarse chapter samples can miss a premature
+answer or a label disappearing at a transition. Play the final MP4.
 The shared pipeline validates dimensions, frame rate, audio and decode, but does
 not certify scientific content or native browser label layout. Report actual
 render time separately from authoring, TTS and first-use downloads.

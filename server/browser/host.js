@@ -131,12 +131,23 @@ export async function renderBrowserScenes({
         encoder.once("error", (error) => resolve({ error }));
         encoder.once("close", (code) => resolve({ code }));
       });
-      const previews = new Map(
-        [0.05, 0.25, 0.5, 0.75, 0.95].map((f) => [
-          Math.min(frames - 1, Math.floor(frames * f)),
-          f,
-        ]),
-      );
+      const previews = new Map();
+      const addPreview = (seconds, name) => {
+        const frame = Math.min(
+          frames - 1,
+          Math.max(0, Math.ceil(seconds * 30 - 1e-8)),
+        );
+        const names = previews.get(frame) || [];
+        names.push(name);
+        previews.set(frame, names);
+      };
+      for (const fraction of [0.05, 0.25, 0.5, 0.75, 0.95])
+        addPreview(Math.floor(frames * fraction) / 30, String(fraction));
+      for (const beat of chapter.beats || []) {
+        addPreview(beat.start, `beat-${beat.id}-start`);
+        if (beat.spoken < beat.duration)
+          addPreview(beat.start + beat.spoken, `beat-${beat.id}-hold`);
+      }
       try {
         for (let frame = 0; frame < frames; frame++) {
           if (encodeError) throw encodeError;
@@ -165,9 +176,9 @@ export async function renderBrowserScenes({
               cache.set(key, file);
             }
           }
-          if (previews.has(frame))
+          for (const name of previews.get(frame) || [])
             await fs.writeFile(
-              path.join(output, `scene-${i}-${previews.get(frame)}.png`),
+              path.join(output, `scene-${i}-${name}.png`),
               bytes,
             );
           if (!encoder.stdin.write(bytes)) await once(encoder.stdin, "drain");
@@ -188,6 +199,12 @@ export async function renderBrowserScenes({
       }
       report.scenes.push({
         index: i,
+        previews: [...previews].flatMap(([frame, names]) =>
+          names.map((name) => ({
+            file: `scene-${i}-${name}.png`,
+            seconds: frame / 30,
+          })),
+        ),
         frames,
         rendered,
         reused,
