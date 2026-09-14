@@ -48,6 +48,7 @@ export async function visualCapabilities(library) {
         "@lesson-library/waves",
         "@lesson-library/statistics",
         "@lesson-library/algorithms",
+        "@lesson-library/maps-flows",
         "molstar",
         "@lesson-library/molecular",
       ],
@@ -94,6 +95,15 @@ export async function visualCapabilities(library) {
             "VexFlow notation and stable note highlights",
             "shared timed musical events",
             "Tone.js offline sound mixed with narration",
+          ],
+        },
+        "maps-flows": {
+          import: "@lesson-library/maps-flows",
+          guidance: "references/maps-flows.md",
+          features: [
+            "bounded geographic projections and connectors",
+            "UTC timelines",
+            "acyclic quantitative flows with fixed scales",
           ],
         },
         physics: {

@@ -61,6 +61,10 @@ export async function renderBrowser(
             "jsxgraph",
             "molstar",
             "@dimforge/rapier3d-compat",
+            "d3-geo",
+            "d3-scale",
+            "d3-time",
+            "d3-sankey",
           ].map((n) => [
             n,
             JSON.parse(

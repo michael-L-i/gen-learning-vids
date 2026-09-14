@@ -84,6 +84,8 @@ For additional composable tools, read only the reference relevant to the scene:
 - [Molecular structures with Mol* and MolViewSpec](molecular.md).
 - [Music notation and offline sound](music.md).
 
+- [Geographic timelines and quantitative flows](maps-flows.md).
+
 ## Optional authored audio
 
 A scene may additionally return `exportAudio()`, called once after construction
