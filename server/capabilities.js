@@ -28,7 +28,25 @@ export async function visualCapabilities(library) {
       ready: await exists(chromium.executablePath()),
       setup:
         "Managed Chromium downloads on first render; learnvid setup-browser can prepare it earlier",
-      libraries: ["SVG / DOM", "animejs", "three", "@rdkit/rdkit", "d3-geo"],
+      libraries: [
+        "SVG / DOM",
+        "animejs",
+        "three",
+        "@rdkit/rdkit",
+        "d3-geo",
+        "@lesson-library/physics",
+      ],
+      modules: {
+        physics: {
+          import: "@lesson-library/physics",
+          guidance: "references/physics.md",
+          features: [
+            "mechanics drawings and attachment anchors",
+            "analytic motion and linked graphs",
+            "measured label placement",
+          ],
+        },
+      },
       description:
         "Freely authored 2D, spatial 3D, molecular diagrams; choose per scene",
       command: "learnvid render-browser DIRECTORY",
