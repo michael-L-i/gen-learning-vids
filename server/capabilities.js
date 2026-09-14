@@ -38,6 +38,7 @@ export async function visualCapabilities(library) {
         "@lesson-library/math",
         "@lesson-library/circuits",
         "@lesson-library/waves",
+        "@lesson-library/statistics",
       ],
       modules: {
         physics: {
@@ -75,6 +76,15 @@ export async function visualCapabilities(library) {
             "scalar waves and superposition",
             "vector-field sampling and SVG arrows",
             "reflection, refraction and total internal reflection",
+          ],
+        },
+        statistics: {
+          import: "@lesson-library/statistics",
+          guidance: "references/statistics.md",
+          features: [
+            "seeded discrete sampling",
+            "histogram counts",
+            "conditional frequencies",
           ],
         },
       },
