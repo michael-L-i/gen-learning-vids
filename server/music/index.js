@@ -87,15 +87,23 @@ export function placePhrase(phrase, start) {
       Object.freeze({ ...e, onset: finite(start + e.onset, "onset") }),
     ),
   );
+  const end = finite(start + phrase.duration, "end");
   return Object.freeze({
     start,
-    end: finite(start + phrase.duration, "end"),
+    end,
     events,
     activeAt(seconds) {
       finite(seconds, "seconds");
-      return events
-        .filter((e) => seconds >= e.onset && seconds < e.onset + e.duration)
-        .map((e) => e.id);
+      return (
+        events
+          // Adjacent notes share the same boundary, instead of adding the
+          // previous duration independently and creating rounding overlaps.
+          .filter(
+            (e, i) =>
+              seconds >= e.onset && seconds < (events[i + 1]?.onset ?? end),
+          )
+          .map((e) => e.id)
+      );
     },
   });
 }

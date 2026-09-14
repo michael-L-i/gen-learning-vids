@@ -42,6 +42,43 @@ test("pitch spelling, beat durations and absolute note activation share one mode
   assert.equal(phrase(120).duration, 2);
   assert.deepEqual(placePhrase(p, 0).activeAt(0), ["a"]);
 });
+test("monophonic activation shares canonical boundaries on exact video frames", () => {
+  const notes = Array.from({ length: 16 }, (_, i) => ({
+    id: String(i),
+    pitch: "C4",
+    beats: 0.25,
+  }));
+  for (const [tempo, frame, expected] of [
+    [90, 43, "8"],
+    [90, 58, "11"],
+    [180, 18, "6"],
+  ]) {
+    const placed = placePhrase(musicPhrase({ tempo, notes }), 0.1);
+    assert.deepEqual(placed.activeAt(frame / 30), [expected]);
+  }
+  for (let tempo = 30; tempo <= 240; tempo++) {
+    for (const start of [0, 0.1, 1, 5, 20.3]) {
+      const placed = placePhrase(musicPhrase({ tempo, notes }), start);
+      for (const e of placed.events)
+        assert.deepEqual(placed.activeAt(e.onset), [e.id]);
+      assert.deepEqual(placed.activeAt(placed.end), []);
+      assert.deepEqual(placed.activeAt(start - 0.001), []);
+      for (
+        let frame = Math.ceil(start * 30);
+        frame < Math.ceil(placed.end * 30);
+        frame++
+      ) {
+        const seconds = frame / 30;
+        assert.equal(
+          placed.activeAt(seconds).length,
+          seconds >= placed.start && seconds < placed.end ? 1 : 0,
+        );
+      }
+      assert.throws(() => placed.activeAt(NaN), /finite/);
+      assert.throws(() => placed.activeAt(Infinity), /finite/);
+    }
+  }
+});
 test("invalid pitches, ambiguous durations, duplicate IDs and incomplete bars are rejected", () => {
   for (const p of ["H4", "C##4", "C9", "A/4", "c4", undefined])
     assert.throws(() => pitchInfo(p));
