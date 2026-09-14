@@ -2,7 +2,7 @@
 
 Start with a small, focused change: improve a guide, repair a labeled visual, fix a reproducible bug, or extend an existing helper. For a new dependency, renderer, or larger design change, open an issue first with the learning task it would support and a concrete example.
 
-The current integration branch is **`feat/video-engine`**. Open PRs against that branch, not `main`, until the project changes its release policy. Read [AGENTS.md](AGENTS.md) for repository conventions; they apply to human and agent-assisted contributions.
+Create contribution branches from **`main`** and open PRs against `main`. Read [AGENTS.md](AGENTS.md) for repository conventions; they apply to human and agent-assisted contributions.
 
 ## Set up a checkout
 
@@ -15,7 +15,7 @@ git clone https://github.com/YOUR-USERNAME/gen-learning-vids.git
 cd gen-learning-vids
 git remote add upstream https://github.com/michael-L-i/gen-learning-vids.git
 git fetch upstream
-git switch -c my-change upstream/feat/video-engine
+git switch -c my-change upstream/main
 nvm install                    # optional, if you use nvm
 npm ci
 npm run check
@@ -96,7 +96,7 @@ git status --short
 git push -u origin my-change
 ```
 
-Open a PR with base `michael-L-i/gen-learning-vids:feat/video-engine`. Include:
+Open a PR with base `michael-L-i/gen-learning-vids:main`. Include:
 
 - The problem and the resulting behavior, with a concrete example where useful.
 - Checks run, their results, and any optional checks skipped.

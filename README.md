@@ -31,7 +31,7 @@ macOS is the tested platform. Install **Node.js 22.16 or newer**, **FFmpeg/FFpro
 ```sh
 git clone https://github.com/michael-L-i/gen-learning-vids.git
 cd gen-learning-vids
-git switch feat/video-engine
+git switch main
 nvm install                     # optional: uses .nvmrc when nvm is installed
 npm ci
 npm run build
@@ -39,7 +39,7 @@ node bin/learnvid.js doctor
 npm start
 ```
 
-The current engine work is on **`feat/video-engine`**. Contribution branches target that branch. On macOS, `brew install ffmpeg` supplies both media commands. A doctor report may show an unavailable model provider until you sign in; that does not prevent rendering an authored example.
+The engine and contribution workflow are on **`main`**. Create contribution branches from `main` and target it with your PRs. On macOS, `brew install ffmpeg` supplies both media commands. A doctor report may show an unavailable model provider until you sign in; that does not prevent rendering an authored example.
 
 **Try the engine without a provider account:** follow the [first-scene example](examples/first-scene/README.md). It renders a short animated area explanation from two source files, into a separate library folder, and includes a verification command.
 
