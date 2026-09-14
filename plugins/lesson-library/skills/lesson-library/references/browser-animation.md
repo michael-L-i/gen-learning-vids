@@ -109,3 +109,9 @@ answer or a label disappearing at a transition. Play the final MP4.
 The shared pipeline validates dimensions, frame rate, audio and decode, but does
 not certify scientific content or native browser label layout. Report actual
 render time separately from authoring, TTS and first-use downloads.
+
+For scalar waves, vector fields and geometric optics, import from
+`@lesson-library/waves`. Compose deterministic wave/superposition samplers,
+field grids and SVG arrows, or reflection/refraction directions (including total
+internal reflection). Read [waves and optics](waves.md) for coordinate conventions,
+units, singularity masks, numeric limits and model assumptions before authoring.
