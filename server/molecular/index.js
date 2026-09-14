@@ -332,6 +332,10 @@ export async function createMolecularViewer(root, options) {
         throw new Error(
           `atom selection must match exactly one atom; got ${selected.elementCount}. Specify chain, residue and atom_id to resolve alternate locations.`,
         );
+      if (!structureModule.Unit.isAtomic(selected.units[0]))
+        throw new TypeError(
+          "atom measurements require atomic coordinates, not coarse elements",
+        );
       const unit = selected.units[0],
         element = unit.elements[0],
         position = [0, 0, 0];
