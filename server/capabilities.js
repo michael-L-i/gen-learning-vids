@@ -36,6 +36,7 @@ export async function visualCapabilities(library) {
         "d3-geo",
         "@lesson-library/physics",
         "@lesson-library/math",
+        "@lesson-library/circuits",
       ],
       modules: {
         physics: {
@@ -54,6 +55,16 @@ export async function visualCapabilities(library) {
             "2D linear maps",
             "basis and grid geometry",
             "determinant and area",
+          ],
+        },
+        circuits: {
+          import: "@lesson-library/circuits",
+          guidance: "references/circuits.md",
+          features: [
+            "SVG schematics",
+            "fixed-potential resistor networks",
+            "analytic series RC response",
+            "signal traces",
           ],
         },
       },

@@ -74,6 +74,7 @@ For additional composable tools, read only the reference relevant to the scene:
 
 - [Physics helpers](physics.md).
 - [Math helpers](math.md).
+- [Circuits helpers](circuits.md).
 
 ## Quality and performance
 
