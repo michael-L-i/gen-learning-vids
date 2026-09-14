@@ -212,6 +212,8 @@ export async function createImageInspector(
       if (busy)
         throw new Error("Await the previous focus call before seeking again");
       const r = regionRect(region, width, height);
+      if (wrapper.clientWidth <= 0 || wrapper.clientHeight <= 0)
+        throw new Error("Image container needs a visible nonzero size");
       busy = true;
       try {
         viewer.viewport.resize(

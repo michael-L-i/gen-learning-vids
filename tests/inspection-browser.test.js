@@ -109,6 +109,43 @@ test("OpenSeadragon A-B-A pixels/anchors and DOM Range wrapped replacement are d
   assert.equal(result.resized[0].start, 2);
   assert.equal(result.resized[0].text, "long");
   assert.ok(result.wrapped[0].rects.length > result.long[0].rects.length);
+  const failures = await page.evaluate(async (origin) => {
+    const source = {
+      id: "s",
+      title: "Test",
+      url: "https://example.com",
+      attribution: "Test",
+      rights: "Fixture",
+    };
+    const messages = [];
+    document.querySelector("#image").style.display = "none";
+    try {
+      await view.focus(a);
+    } catch (error) {
+      messages.push(error.message);
+    }
+    document.querySelector("#image").style.display = "block";
+    for (const url of [
+      "https://example.com/remote.png",
+      origin + "/missing.png",
+    ]) {
+      const holder = document.createElement("div");
+      holder.style.cssText = "width:100px;height:100px";
+      document.body.append(holder);
+      try {
+        await Inspection.createImageInspector(holder, { url, source });
+      } catch (error) {
+        messages.push(error.message);
+      }
+      if (holder.children.length)
+        throw Error("Failed image left an owned viewer behind");
+      holder.remove();
+    }
+    return messages;
+  }, origin);
+  assert.match(failures[0], /visible nonzero/);
+  assert.match(failures[1], /same-origin/);
+  assert.match(failures[2], /Unable to open/);
   await page.evaluate(() => {
     view.dispose();
     annotations.dispose();
