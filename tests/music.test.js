@@ -123,6 +123,12 @@ test("VexFlow and Tone produce synchronized notation and audible music in encode
  import {musicPhrase,placePhrase,musicNotation,renderMusicAudio} from '@lesson-library/music';
  export async function buildScene(root,ctx){
   const p=musicPhrase({tempo:240,notes:[{id:'a',pitch:'C5',beats:1},{id:'b',pitch:'D5',beats:1},{id:'c',pitch:'E5',beats:1},{id:'d',pitch:'C5',beats:1}]});
+  for(const accidental of ['Bb4','B#4']){
+    const box=document.createElement('div');root.append(box);
+    const checked=await musicNotation(box,{phrase:musicPhrase({notes:[{id:'altered',pitch:accidental,beats:2},{id:'natural',pitch:'B4',beats:2}]})});
+    if(!checked.notes[1].getModifiers().some(m=>m.type==='n'))throw Error('B accidental needs a natural cancellation');
+    box.remove();
+  }
   const score=await musicNotation(root,{phrase:p});
   const placed=placePhrase(p,ctx.beats[0].spoken+.2);
   score.highlight(placed.activeAt(.96));
