@@ -30,6 +30,7 @@
     "esbuild": "^0.28.2",
     "express": "^5.1.0",
     "htmlparser2": "^12.0.0",
+    "jsxgraph": "^1.13.3",
     "kokoro-js": "^1.2.1",
     "lucide-react": "^0.468.0",
     "mathjax-full": "^3.2.2",
