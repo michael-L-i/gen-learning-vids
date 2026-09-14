@@ -127,3 +127,30 @@ test("signal trace has exact endpoints and deterministic independent samples", (
   assert.equal(signalTrace(input), signalTrace(input));
   assert.throws(() => signalTrace({ ...input, signal: () => NaN }));
 });
+test("voltage source polarity stays upright for vertical terminals", () => {
+  const s = circuitSymbol({
+    kind: "voltageSource",
+    id: "V",
+    a: { x: 20, y: 0 },
+    b: { x: 20, y: 100 },
+    nodeA: "plus",
+    nodeB: "minus",
+  });
+  assert.match(s.svg, /<text x="20" y="39"[^>]*>\+<\/text>/);
+  assert.match(s.svg, /<text x="20" y="61"[^>]*>−<\/text>/);
+});
+test("coupled unknown nodes solve independently of uniform resistance scale", () => {
+  for (const scale of [1e-12, 1, 1e12]) {
+    const result = solveDC({
+      nodes: ["s", "a", "b", "g"],
+      fixed: { s: 9, g: 0 },
+      resistors: [
+        { id: "r1", a: "s", b: "a", resistance: scale },
+        { id: "r2", a: "a", b: "b", resistance: scale },
+        { id: "r3", a: "b", b: "g", resistance: scale },
+      ],
+    });
+    near(result.potentials.a, 6);
+    near(result.potentials.b, 3);
+  }
+});

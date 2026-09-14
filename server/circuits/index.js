@@ -202,14 +202,21 @@ export function circuitSymbol({
     body =
       line(0, 0, mid - 25, 0) +
       `<circle cx="${mid}" cy="0" r="25"/>` +
-      line(mid + 25, 0, length, 0) +
-      line(mid - 16, 0, mid - 6, 0) +
-      line(mid - 11, -5, mid - 11, 5) +
-      line(mid + 7, 0, mid + 17, 0);
+      line(mid + 25, 0, length, 0);
   else throw new Error(`Unsupported circuit symbol ${kind}`);
+  const polarity =
+    kind === "voltageSource"
+      ? [-11, 11]
+          .map((offset, i) => {
+            const x = (a.x + b.x) / 2 + (offset * (b.x - a.x)) / length;
+            const y = (a.y + b.y) / 2 + (offset * (b.y - a.y)) / length;
+            return `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" fill="${escape(color)}" font-family="sans-serif" font-size="20">${i ? "−" : "+"}</text>`;
+          })
+          .join("")
+      : "";
   return {
     terminals: { a: { ...a, node: nodeA }, b: { ...b, node: nodeB } },
-    svg: `<g data-component="${escape(identity)}" stroke="${escape(color)}" stroke-width="3" fill="none"><g transform="translate(${a.x} ${a.y}) rotate(${angle})">${body}</g></g>${label ? `<text x="${(a.x + b.x) / 2}" y="${(a.y + b.y) / 2 - 36}" text-anchor="middle" fill="${escape(color)}">${escape(label)}</text>` : ""}`,
+    svg: `<g data-component="${escape(identity)}" stroke="${escape(color)}" stroke-width="3" fill="none"><g transform="translate(${a.x} ${a.y}) rotate(${angle})">${body}</g></g>${polarity}${label ? `<text x="${(a.x + b.x) / 2}" y="${(a.y + b.y) / 2 - 36}" text-anchor="middle" fill="${escape(color)}">${escape(label)}</text>` : ""}`,
   };
 }
 
