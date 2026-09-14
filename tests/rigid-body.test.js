@@ -148,3 +148,51 @@ test("fixed bodies cannot report velocity inconsistent with a stationary pose", 
       /Fixed bodies/,
     );
 });
+test("fixed and spherical joints preserve their distinct degrees of freedom", async () => {
+  const q = new THREE.Quaternion().setFromAxisAngle(
+      new THREE.Vector3(0, 0, 1),
+      0.5,
+    ),
+    anchor = new THREE.Vector3(-1, 0, 0)
+      .applyQuaternion(q.clone().invert())
+      .toArray();
+  const bodies = [
+    { id: "pivot", type: "fixed", shape: { kind: "ball", radius: 0.05 } },
+    {
+      id: "body",
+      position: [1, 0, 0],
+      rotation: q.toArray(),
+      shape: { kind: "cuboid", halfExtents: [0.2, 0.3, 0.4] },
+    },
+  ];
+  const fixed = await rigidBodyPlayback({
+    duration: 0.5,
+    bodies,
+    joints: [
+      { id: "weld", kind: "fixed", a: "pivot", b: "body", anchorB: anchor },
+    ],
+  });
+  const b = fixed.at(0.5).bodies.body;
+  near(b.position[0], 1, 0.002);
+  near(b.position[1], 0, 0.002);
+  near(b.rotation[2], q.z, 0.002);
+  const spherical = await rigidBodyPlayback({
+    duration: 0.5,
+    bodies,
+    joints: [
+      {
+        id: "ballJoint",
+        kind: "spherical",
+        a: "pivot",
+        b: "body",
+        anchorB: anchor,
+      },
+    ],
+  });
+  const moving = spherical.at(0.5).bodies.body,
+    p = new THREE.Vector3(...anchor)
+      .applyQuaternion(new THREE.Quaternion(...moving.rotation))
+      .add(new THREE.Vector3(...moving.position));
+  assert.ok(p.length() < 0.01);
+  assert.ok(moving.position[1] < -0.2);
+});
