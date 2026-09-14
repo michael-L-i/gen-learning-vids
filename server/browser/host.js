@@ -35,6 +35,9 @@ export async function renderBrowserScenes({
       "@lesson-library/circuits": fileURLToPath(
         new URL("../circuits/index.js", import.meta.url),
       ),
+      "@lesson-library/waves": fileURLToPath(
+        new URL("../waves/index.js", import.meta.url),
+      ),
 
       "@lesson-library/chemistry": fileURLToPath(
         new URL("../chemistry/diagram.js", import.meta.url),

@@ -37,6 +37,7 @@ export async function visualCapabilities(library) {
         "@lesson-library/physics",
         "@lesson-library/math",
         "@lesson-library/circuits",
+        "@lesson-library/waves",
       ],
       modules: {
         physics: {
@@ -65,6 +66,15 @@ export async function visualCapabilities(library) {
             "fixed-potential resistor networks",
             "analytic series RC response",
             "signal traces",
+          ],
+        },
+        waves: {
+          import: "@lesson-library/waves",
+          guidance: "references/waves.md",
+          features: [
+            "scalar waves and superposition",
+            "vector-field sampling and SVG arrows",
+            "reflection, refraction and total internal reflection",
           ],
         },
       },
