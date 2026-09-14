@@ -142,7 +142,7 @@ export function pointChargeField(
       result = [0, 0];
     for (const source of sources) {
       const delta = p.map((v, i) => v - source.position[i]),
-        radius = Math.hypot(...delta);
+        radius = finite(Math.hypot(...delta), "charge distance");
       if (radius <= exclusionRadius) return null;
       const magnitude = (constant * source.charge) / radius / radius;
       for (let i = 0; i < 2; i++) result[i] += magnitude * (delta[i] / radius);
@@ -223,8 +223,11 @@ export function rayInterface({ incident, normal, nFrom, nTo }) {
     d.map((v, i) => v + 2 * cosine * n[i]),
     "reflected",
   );
-  const tangent = d.map((v, i) => v + cosine * n[i]);
-  const sine = Math.min(1, Math.hypot(...tangent)),
+  // Project onto an explicitly perpendicular basis. Subtracting the normal
+  // component leaves a parallel rounding residue at exact normal incidence.
+  const tangent = [-n[1], n[0]],
+    signedSine = dot(d, tangent);
+  const sine = Math.min(1, Math.abs(signedSine)),
     ratio = nFrom / nTo;
   const transmittedSine =
     sine === 0
@@ -233,7 +236,11 @@ export function rayInterface({ incident, normal, nFrom, nTo }) {
         ? ratio * sine
         : (nFrom * sine) / nTo;
   const criticalAngle = nFrom > nTo ? Math.asin(nTo / nFrom) : null;
-  const common = { reflected, incidentAngle: Math.acos(cosine), criticalAngle };
+  const common = {
+    reflected,
+    incidentAngle: Math.atan2(sine, cosine),
+    criticalAngle,
+  };
   // A 1e-12 tolerance treats floating-point critical-angle roundoff as grazing.
   if (transmittedSine > 1 + 1e-12)
     return {
@@ -249,7 +256,7 @@ export function rayInterface({ incident, normal, nFrom, nTo }) {
     sine === 0
       ? n.map((v) => -v)
       : unit(
-          tangent.map((v, i) => (v / sine) * s - c * n[i]),
+          tangent.map((v, i) => Math.sign(signedSine) * v * s - c * n[i]),
           "refracted",
         );
   return {

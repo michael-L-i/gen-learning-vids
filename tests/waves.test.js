@@ -216,3 +216,33 @@ test("near-normal high-contrast rays avoid an overflowing intermediate ratio", (
   close(r.refracted[0], (1e10 * 1e-320) / 1e-300, 1e-20);
   close(Math.hypot(...r.refracted), 1);
 });
+
+test("rotated exact normal incidence has no spurious tangent at high contrast", () => {
+  for (const angle of [0.1, 0.7, 2.4]) {
+    const normal = [Math.cos(angle), Math.sin(angle)];
+    for (const nFrom of [1e15, 1e20]) {
+      const r = rayInterface({
+        normal,
+        incident: normal.map((v) => -v),
+        nFrom,
+        nTo: 1,
+      });
+      assert.equal(r.totalInternalReflection, false);
+      close(r.refractedAngle, 0);
+      close(r.incidentAngle, 0);
+      vec(
+        r.refracted,
+        normal.map((v) => -v),
+      );
+    }
+  }
+});
+test("overflowing point-field distance fails instead of silently returning zero", () => {
+  assert.throws(
+    () =>
+      pointChargeField([{ position: [0, 0], charge: 1e308 }])([
+        1.7e308, 1.7e308,
+      ]),
+    /charge distance must be finite/,
+  );
+});
