@@ -28,7 +28,21 @@ export async function visualCapabilities(library) {
       ready: await exists(chromium.executablePath()),
       setup:
         "Managed Chromium downloads on first render; learnvid setup-browser can prepare it earlier",
-      libraries: ["SVG / DOM", "animejs", "three", "@rdkit/rdkit", "d3-geo"],
+      libraries: [
+        "SVG / DOM",
+        "animejs",
+        "three",
+        "@rdkit/rdkit",
+        "d3-geo",
+        "@lesson-library/circuits",
+      ],
+      modules: {
+        circuits: {
+          guidance: "references/circuits.md",
+          scope:
+            "SVG schematics, fixed-potential resistor networks, analytic series RC response, signal traces",
+        },
+      },
       description:
         "Freely authored 2D, spatial 3D, molecular diagrams; choose per scene",
       command: "learnvid render-browser DIRECTORY",

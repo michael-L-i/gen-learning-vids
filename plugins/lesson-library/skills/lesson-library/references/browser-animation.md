@@ -109,3 +109,8 @@ answer or a label disappearing at a transition. Play the final MP4.
 The shared pipeline validates dimensions, frame rate, audio and decode, but does
 not certify scientific content or native browser label layout. Report actual
 render time separately from authoring, TTS and first-use downloads.
+
+For optional circuit schematics, validated DC resistor networks, analytic series
+RC responses and signal plots, read [circuits](circuits.md) and import
+`@lesson-library/circuits`. Author node identities and polarity explicitly; model
+time and narration time remain separate.
