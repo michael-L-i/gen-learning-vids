@@ -39,6 +39,7 @@ export async function visualCapabilities(library) {
         "@lesson-library/circuits",
         "@lesson-library/waves",
         "@lesson-library/statistics",
+        "@lesson-library/algorithms",
       ],
       modules: {
         physics: {
@@ -85,6 +86,15 @@ export async function visualCapabilities(library) {
             "seeded discrete sampling",
             "histogram counts",
             "conditional frequencies",
+          ],
+        },
+        algorithms: {
+          import: "@lesson-library/algorithms",
+          guidance: "references/algorithms.md",
+          features: [
+            "immutable breadth-first graph-search traces",
+            "stable-ID graph and queue geometry",
+            "random-access trace playback",
           ],
         },
       },

@@ -77,6 +77,7 @@ For additional composable tools, read only the reference relevant to the scene:
 - [Circuits helpers](circuits.md).
 - [Waves helpers](waves.md).
 - [Statistics helpers](statistics.md).
+- [Algorithms helpers](algorithms.md).
 
 ## Quality and performance
 
