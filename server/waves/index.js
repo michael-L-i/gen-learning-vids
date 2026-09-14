@@ -226,7 +226,12 @@ export function rayInterface({ incident, normal, nFrom, nTo }) {
   const tangent = d.map((v, i) => v + cosine * n[i]);
   const sine = Math.min(1, Math.hypot(...tangent)),
     ratio = nFrom / nTo;
-  const transmittedSine = sine === 0 ? 0 : ratio * sine;
+  const transmittedSine =
+    sine === 0
+      ? 0
+      : Number.isFinite(ratio)
+        ? ratio * sine
+        : (nFrom * sine) / nTo;
   const criticalAngle = nFrom > nTo ? Math.asin(nTo / nFrom) : null;
   const common = { reflected, incidentAngle: Math.acos(cosine), criticalAngle };
   // A 1e-12 tolerance treats floating-point critical-angle roundoff as grazing.

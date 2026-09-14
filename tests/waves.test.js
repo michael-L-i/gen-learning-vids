@@ -203,3 +203,16 @@ test("invalid geometry, units and sampler values fail actionably", () => {
     /exclusionRadius/,
   );
 });
+
+// The ratio can overflow even though the resulting direction is representable.
+test("near-normal high-contrast rays avoid an overflowing intermediate ratio", () => {
+  const r = rayInterface({
+    incident: [1e-320, -1],
+    normal: [0, 1],
+    nFrom: 1e10,
+    nTo: 1e-300,
+  });
+  assert.equal(r.totalInternalReflection, false);
+  close(r.refracted[0], (1e10 * 1e-320) / 1e-300, 1e-20);
+  close(Math.hypot(...r.refracted), 1);
+});
