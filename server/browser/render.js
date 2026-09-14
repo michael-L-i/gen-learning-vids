@@ -51,21 +51,23 @@ export async function renderBrowser(
       return {
         executable,
         packages: Object.fromEntries(
-          ["three", "animejs", "@rdkit/rdkit", "playwright"].map((n) => [
-            n,
-            JSON.parse(
-              require("node:fs").readFileSync(
-                path.join(
-                  fileURLToPath(
-                    new URL("../../node_modules/", import.meta.url),
+          ["three", "animejs", "@rdkit/rdkit", "playwright", "elkjs"].map(
+            (n) => [
+              n,
+              JSON.parse(
+                require("node:fs").readFileSync(
+                  path.join(
+                    fileURLToPath(
+                      new URL("../../node_modules/", import.meta.url),
+                    ),
+                    n,
+                    "package.json",
                   ),
-                  n,
-                  "package.json",
+                  "utf8",
                 ),
-                "utf8",
-              ),
-            ).version,
-          ]),
+              ).version,
+            ],
+          ),
         ),
       };
     },

@@ -34,6 +34,8 @@ export async function visualCapabilities(library) {
         "three",
         "@rdkit/rdkit",
         "d3-geo",
+        "elkjs",
+        "@lesson-library/diagrams",
         "@lesson-library/physics",
         "@lesson-library/math",
         "@lesson-library/circuits",
@@ -42,6 +44,15 @@ export async function visualCapabilities(library) {
         "@lesson-library/algorithms",
       ],
       modules: {
+        diagrams: {
+          import: "@lesson-library/diagrams",
+          guidance: "references/diagrams.md",
+          features: [
+            "ELK layered relationship layouts",
+            "stable-ID SVG nodes and labeled routes",
+            "deterministic reveals and shared-layout comparisons",
+          ],
+        },
         physics: {
           import: "@lesson-library/physics",
           guidance: "references/physics.md",
