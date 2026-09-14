@@ -73,6 +73,7 @@ chemical correctness. Use measured beats and review every chemical change.
 For additional composable tools, read only the reference relevant to the scene:
 
 - [Physics helpers](physics.md).
+- [Math helpers](math.md).
 
 ## Quality and performance
 

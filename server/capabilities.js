@@ -35,6 +35,7 @@ export async function visualCapabilities(library) {
         "@rdkit/rdkit",
         "d3-geo",
         "@lesson-library/physics",
+        "@lesson-library/math",
       ],
       modules: {
         physics: {
@@ -44,6 +45,15 @@ export async function visualCapabilities(library) {
             "mechanics drawings and attachment anchors",
             "analytic motion and linked graphs",
             "measured label placement",
+          ],
+        },
+        math: {
+          import: "@lesson-library/math",
+          guidance: "references/math.md",
+          features: [
+            "2D linear maps",
+            "basis and grid geometry",
+            "determinant and area",
           ],
         },
       },
