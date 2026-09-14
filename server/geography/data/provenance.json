@@ -1,0 +1,10 @@
+{
+  "name": "Natural Earth Admin 0 countries, 1:110m",
+  "source": "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson",
+  "license": "Public domain",
+  "licenseUrl": "https://www.naturalearthdata.com/about/terms-of-use/",
+  "retrievedAt": "2026-09-13T18:25:16.843Z",
+  "originalSha256": "6866c877d39cba9c357620878839b336d569f8c662d3cfab4cb1dbe2d39c977f",
+  "changes": "Retained ADM0_A3 as id and ADMIN as name; normalized polygon winding for D3 spherical geometry. No statistical values are bundled.",
+  "boundaryNote": "Natural Earth de facto boundaries; generalized cartography, not a statement on sovereignty."
+}

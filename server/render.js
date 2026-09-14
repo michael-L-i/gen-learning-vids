@@ -1,9 +1,11 @@
+import { prepareAssets, assetCredits } from "./assets.js";
 import fs from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
 import { run } from "./process.js";
 import { atomicWrite } from "./store.js";
 import { speak } from "./speech.js";
+import { renderAnimation } from "./animation/render.js";
 
 import { palettes, escapeXml, wrap, textLines } from "./visual-utils.js";
 import { contentSvg, frameCount, resolvePalette } from "./visuals.js";
@@ -46,6 +48,18 @@ function vttTime(s) {
 export function captions(scenes) {
   const cues = [];
   for (const scene of scenes) {
+    if (scene.cues) {
+      for (const cue of scene.cues) {
+        const words = cue.narration.split(/\s+/);
+        for (let i = 0; i < words.length; i += 11) {
+          const end = Math.min(i + 11, words.length);
+          cues.push(
+            `${vttTime(scene.start + cue.start + (cue.duration * i) / words.length)} --> ${vttTime(scene.start + cue.start + (cue.duration * end) / words.length)}\n${escapeXml(words.slice(i, end).join(" "))}`,
+          );
+        }
+      }
+      continue;
+    }
     const words = scene.narration.split(/\s+/);
     const chunk = 11;
     for (let i = 0; i < words.length; i += chunk) {
@@ -69,11 +83,25 @@ export async function renderLesson(
   lesson,
   settings,
   progress = async () => {},
-  { synthesize = speak } = {},
+  { synthesize = speak, fetchImage } = {},
 ) {
   const dir = library.lessonDir(lesson.id);
   const render = path.join(dir, "render");
   await fs.mkdir(render, { recursive: true });
+  const assetDir = path.join(dir, "assets");
+  const imageAssets = await prepareAssets(lesson.assets || [], assetDir, {
+    fetchImage,
+  });
+  const assets = Object.fromEntries(
+    await Promise.all(
+      imageAssets.map(async (a) => [
+        a.id,
+        await fs.readFile(path.join(assetDir, a.file)),
+      ]),
+    ),
+  );
+  const credits = imageAssets.length ? assetCredits(imageAssets) : "";
+  if (credits) await atomicWrite(path.join(dir, "image-credits.md"), credits);
   await sharp(
     Buffer.from(
       sceneSvg(lesson.scenes[0], 0, lesson.scenes.length, lesson.style),
@@ -85,6 +113,41 @@ export async function renderLesson(
   const scenes = [];
   for (let i = 0; i < lesson.scenes.length; i++) {
     const scene = lesson.scenes[i];
+    if (scene.content?.kind === "animation") {
+      const animationDir = path.join(render, `animation-${i}`);
+      const result = await renderAnimation({
+        scene,
+        assets,
+        dir: animationDir,
+        settings,
+        synthesize,
+        cacheDir: path.join(library.root, ".models", "kokoro"),
+        progress: (stage) =>
+          progress(stage, 15 + (70 * i) / lesson.scenes.length),
+      });
+      await fs.rename(result.video, path.join(render, `scene-${i}.mp4`));
+      if (i === 0)
+        await fs.copyFile(
+          path.join(animationDir, "thumbnail.png"),
+          path.join(dir, "thumbnail.png"),
+        );
+      await fs.copyFile(
+        path.join(animationDir, "timeline.json"),
+        path.join(dir, `timeline-${i}.json`),
+      );
+      await fs.copyFile(
+        path.join(animationDir, "checks.json"),
+        path.join(dir, `checks-${i}.json`),
+      );
+      scenes.push({
+        ...scene,
+        start,
+        duration: result.duration,
+        cues: result.timeline,
+      });
+      start += result.duration;
+      continue;
+    }
     await progress(
       `Narrating chapter ${i + 1} of ${lesson.scenes.length}`,
       15 + (70 * i) / lesson.scenes.length,
@@ -140,17 +203,15 @@ export async function renderLesson(
       "-i",
       audio,
       "-r",
-      "24",
+      "30",
       "-c:v",
       "libx264",
       "-preset",
-      "ultrafast",
-      "-tune",
-      "stillimage",
+      "fast",
       "-crf",
-      "23",
+      "18",
       "-vf",
-      "fps=24,fade=t=in:st=0:d=0.3,format=yuv420p",
+      "fps=30,fade=t=in:st=0:d=0.3,format=yuv420p",
       "-c:a",
       "aac",
       "-b:a",
@@ -196,11 +257,18 @@ export async function renderLesson(
     `# ${lesson.title}\n\n${lesson.summary}\n\n` +
       scenes
         .map((s) => `## ${clock(s.start)} — ${s.title}\n\n${s.narration}\n`)
-        .join("\n"),
+        .join("\n") +
+      ((lesson.sources || []).length
+        ? "\nSources:\n" +
+          lesson.sources.map((s) => `- [${s.title}](${s.url})`).join("\n")
+        : "") +
+      "\n" +
+      credits,
   );
   await fs.rm(render, { recursive: true, force: true });
   return {
     ...lesson,
+    imageAssets,
     scenes,
     duration: start,
     video: `${lesson.id}.mp4`,

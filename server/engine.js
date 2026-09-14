@@ -183,6 +183,10 @@ export async function retryLesson(library, id) {
     const lesson = await library.lesson(id);
     if (lesson.status === "ready")
       throw new Error("This lesson is already ready.");
+    if (lesson.renderer === "matplotlib")
+      throw new Error(
+        "Re-render this locally authored lesson with learnvid render-scientific and its source folder. Automatic UI retries are not available for Python scenes yet.",
+      );
     if (lesson.workerPid) {
       try {
         process.kill(lesson.workerPid, 0);

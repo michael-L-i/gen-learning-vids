@@ -1,4 +1,6 @@
+import { assetsSchema } from "./asset-schema.js";
 import { z } from "zod";
+import { animationSchema, validateAnimation } from "./animation/schema.js";
 import { kokoroVoices } from "./speech-options.js";
 import { zodToJsonSchema } from "zod-to-json-schema";
 
@@ -7,6 +9,7 @@ const presentation = z.enum(presentations);
 const palette = z.enum(["auto", "paper", "midnight", "sage"]);
 
 export const settingsSchema = z.object({
+  blenderEnabled: z.boolean().default(false),
   provider: z.enum(["codex", "claude"]).default("codex"),
   model: z.string().max(120).default(""),
   tts: z.enum(["kokoro", "system", "piper"]).default("kokoro"),
@@ -29,6 +32,7 @@ export const createSchema = z.object({
 });
 const coordinate = z.number().finite().min(-1e9).max(1e9);
 export const visualContentSchema = z.discriminatedUnion("kind", [
+  animationSchema,
   z.object({
     kind: z.literal("equation"),
     steps: z
@@ -104,6 +108,7 @@ export const sceneSchema = z
     title: z.string().min(1).max(75),
     narration: z.string().min(10).max(1600),
     visual: z.enum([
+      "animation",
       "concept",
       "steps",
       "comparison",
@@ -119,7 +124,9 @@ export const sceneSchema = z
   })
   .superRefine((scene, ctx) => {
     if (
-      ["equation", "code", "diagram", "plot"].includes(scene.visual) &&
+      ["animation", "equation", "code", "diagram", "plot"].includes(
+        scene.visual,
+      ) &&
       scene.content?.kind !== scene.visual
     )
       ctx.addIssue({
@@ -133,6 +140,22 @@ export const sceneSchema = z
         path: ["visual"],
         message: "Visual must match content.kind.",
       });
+    if (scene.content?.kind === "animation") {
+      try {
+        validateAnimation(scene.content);
+        if (
+          scene.narration !==
+          scene.content.beats.map((b) => b.narration).join(" ")
+        )
+          throw new Error("Narration must match animation beats.");
+      } catch (e) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["content"],
+          message: e.message,
+        });
+      }
+    }
     if (scene.content?.kind === "diagram") {
       const ids = scene.content.nodes.map((n) => n.id);
       if (
@@ -161,6 +184,13 @@ export const sceneSchema = z
       });
   });
 export const lessonPlanSchema = z.object({
+  sources: z
+    .array(
+      z.object({ title: z.string().min(1).max(200), url: z.string().url() }),
+    )
+    .max(12)
+    .default([]),
+  assets: assetsSchema,
   title: z.string().min(1).max(100),
   summary: z.string().min(1).max(400),
   learningObjective: z.string().min(1).max(300),

@@ -32,6 +32,8 @@ const { values, positionals } = parseArgs({
     presentation: { type: "string" },
     "visual-brief": { type: "string" },
     plan: { type: "string" },
+    python: { type: "string" },
+    blender: { type: "string" },
     help: { type: "boolean" },
   },
 });
@@ -55,6 +57,14 @@ async function main() {
 learnvid serve [--open] [--dev] [--port 4317]
 learnvid create "Topic" [--goal "What to understand"] [--source FILE] [--brief FILE] [--style auto|paper|midnight|sage] [--wait]
 learnvid create "Topic" --plan FILE [--wait]   Render an agent-authored lesson JSON
+learnvid render-blender DIRECTORY [--blender PATH]  Render trusted local 3D scene.py + lesson.json
+learnvid render-browser DIRECTORY          Render trusted scene.js with 2D / Three.js animation
+learnvid setup-browser                     Download the managed browser runtime
+learnvid capabilities                      List available visual capabilities
+learnvid capability enable|disable blender Enable or disable the external Blender tool
+learnvid render-scientific DIRECTORY [--python PATH]  Run trusted local scene.py + lesson.json
+learnvid image-search "QUERY"               Find images with source and license metadata
+learnvid image-info "File:COMMONS TITLE"    Resolve one Wikimedia Commons image
 learnvid create "Topic" --presentation auto|worked|diagram|code|slides --visual-brief "Visual directions"
 learnvid list
 learnvid show ID
@@ -77,6 +87,80 @@ Creation runs in the background unless --wait is provided. Source files are copi
   }
   const library = await new Library(values.library).init();
   switch (command) {
+    case "capabilities": {
+      const { visualCapabilities } = await import("../server/capabilities.js");
+      print(await visualCapabilities(library));
+      break;
+    }
+    case "capability": {
+      if (!["enable", "disable"].includes(args[0]) || args[1] !== "blender")
+        throw new Error("Use learnvid capability enable|disable blender");
+      print(
+        await library.saveSettings({
+          ...(await library.settings()),
+          blenderEnabled: args[0] === "enable",
+        }),
+      );
+      break;
+    }
+    case "setup-browser": {
+      const { ensureBrowser } = await import("../server/browser/render.js");
+      print({ executable: await ensureBrowser(console.error) });
+      break;
+    }
+    case "render-browser": {
+      if (!args[0])
+        throw new Error(
+          "Provide a folder containing lesson.json and trusted scene.js code.",
+        );
+      const { renderBrowser } = await import("../server/browser/render.js");
+      print(
+        await renderBrowser(library, args[0], {
+          progress: (stage) => console.error(stage),
+        }),
+      );
+      break;
+    }
+    case "image-search":
+    case "image-info": {
+      const { commonsImages } = await import("../server/assets.js");
+      print(
+        await commonsImages(args.join(" "), {
+          exact: command === "image-info",
+        }),
+      );
+      break;
+    }
+    case "render-blender": {
+      if (!args[0])
+        throw new Error(
+          "Provide a folder containing lesson.json and trusted scene.py code.",
+        );
+      const { renderBlender } = await import("../server/blender/render.js");
+      print(
+        await renderBlender(library, args[0], {
+          blender: values.blender,
+          progress: (stage) => console.error(stage),
+        }),
+      );
+      break;
+    }
+    case "render-scientific": {
+      if (!args[0])
+        throw new Error(
+          "Provide a folder containing lesson.json and trusted scene.py code.",
+        );
+      const { renderScientific } = await import(
+        "../server/scientific/render.js"
+      );
+      print(
+        await renderScientific(library, args[0], {
+          python: values.python,
+          progress: (stage) => console.error(stage),
+        }),
+      );
+      break;
+    }
     case "serve": {
       const { startServer } = await import("../server/app.js");
       const instance = await startServer({

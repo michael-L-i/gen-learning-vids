@@ -9,6 +9,12 @@ Use the installed `learnvid` CLI. The desktop/browser app and CLI share `~/Lesso
 
 Run `learnvid doctor` to check the library and rendering tools when setup is unknown. If the command is missing, use `node /path/to/gen-learning-vids/bin/learnvid.js` when the repository location is known, or tell the user to run `npm link` in their checkout. Do not invent a repository path.
 
+## Choose visual capabilities
+
+Run `learnvid capabilities` before choosing an authored rendering tool. Choose capabilities scene by scene from the explanation, available tools and user preference; there is no fixed renderer per subject. The browser route includes Anime.js, Three.js, RDKit.js and SVG/DOM composition. Read [browser animation](references/browser-animation.md) when detailed illustrations, spatial scenes or molecular diagrams would help. It shares the same library and lesson context as structured plans.
+
+Blender is an optional external capability and defaults to disabled. Do not enable it just because it is installed: use it when the user has enabled it in Settings or explicitly requests enabling it. The browser route can produce 3D without Blender. Python scientific rendering remains an optional separately installed environment. Do not silently change rendering routes after a failure; report the failed capability and fix it or explain the proposed alternative.
+
 ## Create from this conversation
 
 Read `learnvid profile` and use the current discussion to identify the learner's goal, demonstrated understanding, specific uncertainty, and useful examples. Distinguish evidence from assumptions; a saved note or watched video does not establish mastery. Ask a short prerequisite question only when its answer would materially change the lesson.
