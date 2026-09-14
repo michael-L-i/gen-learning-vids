@@ -40,8 +40,19 @@ export async function visualCapabilities(library) {
         "@lesson-library/waves",
         "@lesson-library/statistics",
         "@lesson-library/algorithms",
+        "molstar",
+        "@lesson-library/molecular",
       ],
       modules: {
+        molecular: {
+          import: "@lesson-library/molecular",
+          guidance: "references/molecular.md",
+          features: [
+            "local Mol* and MolViewSpec structures",
+            "named selections and representations",
+            "atom distances and manual camera rendering",
+          ],
+        },
         physics: {
           import: "@lesson-library/physics",
           guidance: "references/physics.md",
