@@ -38,9 +38,14 @@ export async function visualCapabilities(library) {
       ],
       modules: {
         circuits: {
+          import: "@lesson-library/circuits",
           guidance: "references/circuits.md",
-          scope:
-            "SVG schematics, fixed-potential resistor networks, analytic series RC response, signal traces",
+          features: [
+            "SVG schematics",
+            "fixed-potential resistor networks",
+            "analytic series RC response",
+            "signal traces",
+          ],
         },
       },
       description:
