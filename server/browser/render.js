@@ -52,6 +52,7 @@ export async function renderBrowser(
         executable,
         packages: Object.fromEntries(
           [
+            "elkjs",
             "three",
             "animejs",
             "@rdkit/rdkit",

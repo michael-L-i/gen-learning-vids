@@ -83,10 +83,10 @@ For additional composable tools, read only the reference relevant to the scene:
 - [Algorithms helpers](algorithms.md).
 - [Molecular structures with Mol* and MolViewSpec](molecular.md).
 - [Music notation and offline sound](music.md).
-
 - [Geographic timelines and quantitative flows](maps-flows.md).
-
 - [Image inspection and source text annotations](inspection.md).
+
+- [Relationship and reasoning diagrams](diagrams.md).
 
 ## Optional authored audio
 

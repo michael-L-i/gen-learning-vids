@@ -34,6 +34,8 @@ export async function visualCapabilities(library) {
         "three",
         "@rdkit/rdkit",
         "d3-geo",
+        "elkjs",
+        "@lesson-library/diagrams",
         "jsxgraph",
         "@lesson-library/constructions",
         "@lesson-library/spatial",
@@ -55,6 +57,15 @@ export async function visualCapabilities(library) {
         "@lesson-library/molecular",
       ],
       modules: {
+        diagrams: {
+          import: "@lesson-library/diagrams",
+          guidance: "references/diagrams.md",
+          features: [
+            "ELK layered relationship layouts",
+            "stable-ID SVG nodes and labeled routes",
+            "deterministic reveals and shared-layout comparisons",
+          ],
+        },
         constructions: {
           import: "@lesson-library/constructions",
           guidance: "references/constructions.md",
