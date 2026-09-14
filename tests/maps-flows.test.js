@@ -175,3 +175,87 @@ test("geographic clipping agrees with point bounds for wide and tall viewports",
     );
   }
 });
+
+test("browser SVG renders package geometry and returns identical pixels after A→B→A", async (t) => {
+  if (!process.env.LEARNVID_BROWSER_TEST)
+    return t.skip("Set LEARNVID_BROWSER_TEST=1 for real browser integration");
+  const { build } = await import("esbuild");
+  const { chromium } = await import("playwright");
+  const result = await build({
+    stdin: {
+      contents: "export * from './server/maps-flows/index.js'",
+      resolveDir: process.cwd(),
+    },
+    bundle: true,
+    format: "iife",
+    globalName: "MapsFlows",
+    write: false,
+  });
+  const browser = await chromium.launch({ headless: true });
+  t.after(() => browser.close());
+  const page = await browser.newPage({ viewport: { width: 800, height: 500 } });
+  await page.setContent(
+    '<body style="margin:0"><svg id="view" width="800" height="500"></svg></body>',
+  );
+  await page.addScriptTag({ content: result.outputFiles[0].text });
+  const draw = async (value) =>
+    page.evaluate((value) => {
+      const { geographicMap, utcTimeline, flowLayout } = MapsFlows;
+      const map = geographicMap({
+        bounds: [-5, 45, 15, 60],
+        width: 300,
+        height: 400,
+      });
+      const route = map.route({
+        id: "r",
+        from: [0, 50],
+        to: [10, 55],
+        progress: value,
+      });
+      const date = utcTimeline({
+        domain: ["2024-01-01", "2024-02-01"],
+        duration: 1,
+      }).at(value);
+      const graph = flowLayout(
+        {
+          unit: "tonnes/month",
+          nodes: [{ id: "s" }, { id: "t" }],
+          links: [
+            { id: "st", source: "s", target: "t", value: 50 + 50 * value },
+          ],
+        },
+        { width: 300, height: 350, pixelsPerUnit: 3 },
+      );
+      document.querySelector("svg").innerHTML =
+        `<path d="${route.revealedPath}" fill="none" stroke="blue" stroke-width="4"/><g transform="translate(400 40)"><path d="${graph.links[0].path}" fill="none" stroke="orange" stroke-width="${graph.links[0].width}"/></g><text x="20" y="470">${date.iso} · ${graph.links[0].value} ${graph.unit}</text>`;
+      return { date, graph, route };
+    }, value);
+  const state = await draw(0.2),
+    a = await page.screenshot();
+  await draw(0.8);
+  const b = await page.screenshot();
+  assert.notDeepEqual(a, b);
+  assert.deepEqual(await draw(0.2), state);
+  assert.deepEqual(await page.screenshot(), a);
+});
+
+test("derived projection and timeline arithmetic cannot silently emit nonfinite values", () => {
+  assert.throws(
+    () =>
+      utcTimeline({
+        domain: ["2024-01-01", "2024-02-01"],
+        duration: 1,
+        range: [-Number.MAX_VALUE, Number.MAX_VALUE],
+      }),
+    /finite/,
+  );
+  assert.throws(
+    () =>
+      geographicMap({
+        bounds: [0, 0, Number.MIN_VALUE, Number.MIN_VALUE],
+        width: 500,
+        height: 400,
+      }),
+    /finite/,
+  );
+});
