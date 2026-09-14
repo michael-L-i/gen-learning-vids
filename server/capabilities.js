@@ -34,6 +34,7 @@ export async function visualCapabilities(library) {
         "three",
         "@rdkit/rdkit",
         "d3-geo",
+        "@lesson-library/inspection",
         "@lesson-library/physics",
         "@lesson-library/math",
         "@lesson-library/circuits",
@@ -42,6 +43,15 @@ export async function visualCapabilities(library) {
         "@lesson-library/algorithms",
       ],
       modules: {
+        inspection: {
+          import: "@lesson-library/inspection",
+          guidance: "references/inspection.md",
+          features: [
+            "OpenSeadragon prepared local-image zoom",
+            "source-linked image region anchors",
+            "DOM Range and SVG text annotations",
+          ],
+        },
         physics: {
           import: "@lesson-library/physics",
           guidance: "references/physics.md",

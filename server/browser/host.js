@@ -26,6 +26,9 @@ export async function renderBrowserScenes({
     outfile: path.join(runtime, "scene.js"),
     nodePaths: [modules],
     alias: {
+      "@lesson-library/inspection": fileURLToPath(
+        new URL("../inspection/index.js", import.meta.url),
+      ),
       "@lesson-library/physics": fileURLToPath(
         new URL("../physics/index.js", import.meta.url),
       ),
