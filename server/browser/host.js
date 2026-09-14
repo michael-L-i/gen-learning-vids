@@ -35,6 +35,9 @@ export async function renderBrowserScenes({
       "@lesson-library/rigid-body": fileURLToPath(
         new URL("../rigid-body/index.js", import.meta.url),
       ),
+      "@lesson-library/molecular": fileURLToPath(
+        new URL("../molecular/index.js", import.meta.url),
+      ),
       "@lesson-library/physics": fileURLToPath(
         new URL("../physics/index.js", import.meta.url),
       ),

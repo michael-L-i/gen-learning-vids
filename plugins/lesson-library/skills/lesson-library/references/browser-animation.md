@@ -81,6 +81,7 @@ For additional composable tools, read only the reference relevant to the scene:
 - [Waves helpers](waves.md).
 - [Statistics helpers](statistics.md).
 - [Algorithms helpers](algorithms.md).
+- [Molecular structures with Mol* and MolViewSpec](molecular.md).
 
 ## Quality and performance
 

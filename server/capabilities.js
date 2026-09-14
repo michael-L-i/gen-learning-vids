@@ -45,6 +45,8 @@ export async function visualCapabilities(library) {
         "@lesson-library/waves",
         "@lesson-library/statistics",
         "@lesson-library/algorithms",
+        "molstar",
+        "@lesson-library/molecular",
       ],
       modules: {
         constructions: {
@@ -71,6 +73,15 @@ export async function visualCapabilities(library) {
             "Rapier rigid-body collisions and passive joints",
             "deterministic fixed-tick playback",
             "synchronized pose, velocity and energy samples",
+          ],
+        },
+        molecular: {
+          import: "@lesson-library/molecular",
+          guidance: "references/molecular.md",
+          features: [
+            "local Mol* and MolViewSpec structures",
+            "named selections and representations",
+            "atom distances and manual camera rendering",
           ],
         },
         physics: {

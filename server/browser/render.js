@@ -51,7 +51,7 @@ export async function renderBrowser(
       return {
         executable,
         packages: Object.fromEntries(
-          ["three", "animejs", "@rdkit/rdkit", "playwright", "jsxgraph"].map(
+          ["three", "animejs", "@rdkit/rdkit", "playwright", "jsxgraph", "molstar"].map(
             (n) => [
               n,
               JSON.parse(

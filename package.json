@@ -35,6 +35,7 @@
     "kokoro-js": "^1.2.1",
     "lucide-react": "^0.468.0",
     "mathjax-full": "^3.2.2",
+    "molstar": "^5.11.0",
     "playwright": "^1.63.0",
     "proper-lockfile": "^4.1.2",
     "react": "^19.2.0",
