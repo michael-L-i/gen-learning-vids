@@ -34,6 +34,8 @@ export async function visualCapabilities(library) {
         "three",
         "@rdkit/rdkit",
         "d3-geo",
+        "jsxgraph",
+        "@lesson-library/constructions",
         "@lesson-library/physics",
         "@lesson-library/math",
         "@lesson-library/circuits",
@@ -42,6 +44,15 @@ export async function visualCapabilities(library) {
         "@lesson-library/algorithms",
       ],
       modules: {
+        constructions: {
+          import: "@lesson-library/constructions",
+          guidance: "references/constructions.md",
+          features: [
+            "JSXGraph constrained triangle, midpoint and altitude",
+            "secants and numerical tangents",
+            "signed Riemann and trapezoidal approximations",
+          ],
+        },
         physics: {
           import: "@lesson-library/physics",
           guidance: "references/physics.md",
