@@ -29,6 +29,12 @@ export async function renderBrowserScenes({
       "@lesson-library/constructions": fileURLToPath(
         new URL("../constructions/index.js", import.meta.url),
       ),
+      "@lesson-library/spatial": fileURLToPath(
+        new URL("../spatial/index.js", import.meta.url),
+      ),
+      "@lesson-library/rigid-body": fileURLToPath(
+        new URL("../rigid-body/index.js", import.meta.url),
+      ),
       "@lesson-library/physics": fileURLToPath(
         new URL("../physics/index.js", import.meta.url),
       ),

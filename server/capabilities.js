@@ -36,6 +36,9 @@ export async function visualCapabilities(library) {
         "d3-geo",
         "jsxgraph",
         "@lesson-library/constructions",
+        "@lesson-library/spatial",
+        "@lesson-library/rigid-body",
+        "@dimforge/rapier3d-compat",
         "@lesson-library/physics",
         "@lesson-library/math",
         "@lesson-library/circuits",
@@ -51,6 +54,23 @@ export async function visualCapabilities(library) {
             "JSXGraph constrained triangle, midpoint and altitude",
             "secants and numerical tangents",
             "signed Riemann and trapezoidal approximations",
+          ],
+        },
+        spatial: {
+          import: "@lesson-library/spatial",
+          guidance: "references/spatial.md",
+          features: [
+            "Three.js convex cutaways with caps and outlines",
+            "absolute exploded assembly views",
+          ],
+        },
+        rigidBody: {
+          import: "@lesson-library/rigid-body",
+          guidance: "references/rigid-body.md",
+          features: [
+            "Rapier rigid-body collisions and passive joints",
+            "deterministic fixed-tick playback",
+            "synchronized pose, velocity and energy samples",
           ],
         },
         physics: {

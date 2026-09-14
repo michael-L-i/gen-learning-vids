@@ -23,6 +23,7 @@
     "build:icon": "node scripts/build-icon.js"
   },
   "dependencies": {
+    "@dimforge/rapier3d-compat": "0.20.0",
     "@huggingface/transformers": "^3.8.1",
     "@rdkit/rdkit": "^2026.3.6",
     "animejs": "^4.5.0",
