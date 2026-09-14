@@ -70,6 +70,10 @@ See the repository's `docs/chemistry-animation.md` for the full helper contract.
 Check source diagrams and each intermediate; graph validation does not certify
 chemical correctness. Use measured beats and review every chemical change.
 
+For additional composable tools, read only the reference relevant to the scene:
+
+- [Physics helpers](physics.md).
+
 ## Quality and performance
 
 Prefer detailed vector artwork or data-derived structures when morphology
