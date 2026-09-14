@@ -46,8 +46,16 @@ test("browser renders SVG, Anime.js, RDKit WASM and Three.js into shared, timed 
         },
         {
           title: "Three",
-          narration: "The spatial object rotates.",
+          narration: "The spatial object rotates. Then it stops.",
           seconds: 1,
+          beats: [
+            {
+              id: "rotate",
+              narration: "The spatial object rotates.",
+              pauseAfter: 0.2,
+            },
+            { id: "stop", narration: "Then it stops.", pauseAfter: 0.1 },
+          ],
         },
       ],
     }),
@@ -75,12 +83,25 @@ test("browser renders SVG, Anime.js, RDKit WASM and Three.js into shared, timed 
   const result = await renderBrowser(lib, source, {
     install: false,
     progress: () => {},
-    synthesize: async (_, file) =>
-      fs.writeFile(file, pcmWave(new Float32Array(2400))),
+    synthesize: async (text, file) =>
+      fs.writeFile(
+        file,
+        pcmWave(new Float32Array(text === "Then it stops." ? 7200 : 2400)),
+      ),
   });
   assert.equal(result.status, "ready");
   assert.equal(result.renderer, "browser");
   assert.equal(result.scenes[1].start, 1);
+  assert.equal(result.scenes[1].beats[1].start, 0.3);
+  assert.equal(result.scenes[1].beats[1].spoken, 0.3);
+  assert.equal(result.scenes[1].cues[0].duration, 0.1);
+  assert.match(
+    await fs.readFile(
+      path.join(lib.lessonDir(result.id), "captions.vtt"),
+      "utf8",
+    ),
+    /00:00:01.300 --> 00:00:01.600/,
+  );
   const work = path.join(lib.lessonDir(result.id), "browser");
   const report = JSON.parse(
     await fs.readFile(path.join(work, "render-report.json")),

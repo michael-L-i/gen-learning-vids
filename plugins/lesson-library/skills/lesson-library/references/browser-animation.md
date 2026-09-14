@@ -39,6 +39,15 @@ Use a new scene per chapter. Await asset loads inside buildScene; declare fonts
 and await their loading before returning. Only local source/runtime requests are
 allowed during capture; acquire referenced public assets before rendering.
 
+For precise explanatory stages, scenes may include `beats`, an array of
+`{id, narration, pauseAfter}`. IDs are unique within the chapter; `pauseAfter`
+defaults to 0.4 seconds (0–10). Chapter narration must equal the beat narrations
+joined with spaces. The shared host speaks each beat separately and supplies
+measured `{id,start,duration,spoken,narration}` in `context.beats`. Starts are
+chapter-relative. Use these boundaries for reveals and intentional holds.
+Captions follow measured beats, with word positions still estimated within each
+beat. Legacy scenes without beats retain their existing timing behavior.
+
 For chemical diagrams:
 ```js
 const rdkit = await window.initRDKitModule({

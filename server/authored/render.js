@@ -8,6 +8,7 @@ import { run } from "../process.js";
 import { speak } from "../speech.js";
 import { atomicWrite, writeJson } from "../store.js";
 import { captions, clock } from "../render.js";
+import { narrateAuthoredScene } from "./narration.js";
 
 export const authoredManifest = z.object({
   files: z.array(z.string().min(1).max(1000)).max(100).default([]),
@@ -27,12 +28,42 @@ export const authoredManifest = z.object({
   }),
   scenes: z
     .array(
-      z.object({
-        title: z.string().min(1).max(100),
-        narration: z.string().min(1).max(1800),
-        takeaway: z.string().max(250).optional(),
-        seconds: z.number().min(1).max(120),
-      }),
+      z
+        .object({
+          title: z.string().min(1).max(100),
+          narration: z.string().min(1).max(1800),
+          takeaway: z.string().max(250).optional(),
+          seconds: z.number().min(1).max(120),
+          beats: z
+            .array(
+              z.object({
+                id: z
+                  .string()
+                  .regex(/^[a-zA-Z][a-zA-Z0-9_-]*$/)
+                  .max(60),
+                narration: z.string().trim().min(1).max(1800),
+                pauseAfter: z.number().min(0).max(10).default(0.4),
+              }),
+            )
+            .min(1)
+            .max(16)
+            .optional(),
+        })
+        .superRefine((scene, ctx) => {
+          if (!scene.beats) return;
+          if (new Set(scene.beats.map((b) => b.id)).size !== scene.beats.length)
+            ctx.addIssue({
+              code: "custom",
+              path: ["beats"],
+              message: "Narration beat IDs must be unique within a chapter",
+            });
+          if (scene.beats.map((b) => b.narration).join(" ") !== scene.narration)
+            ctx.addIssue({
+              code: "custom",
+              path: ["narration"],
+              message: "Chapter narration must equal the joined beat narration",
+            });
+        }),
     )
     .min(1)
     .max(20),
@@ -149,32 +180,20 @@ export async function renderAuthored(
       const s = manifest.scenes[i],
         speech = path.join(work, `speech-${i}.wav`);
       progress(`Narrating chapter ${i + 1}/${manifest.scenes.length}`);
-      await synthesize(s.narration, speech, settings, {
+      const timing = await narrateAuthoredScene({
+        scene: s,
+        output: speech,
+        settings,
+        synthesize,
         cacheDir: path.join(library.root, ".models", "kokoro"),
       });
-      const seconds = Number((await probeVideo(speech)).format.duration);
-      if (!Number.isFinite(seconds) || seconds <= 0)
-        throw new Error("Empty narration");
-      const duration = Math.ceil(Math.max(s.seconds, seconds + 0.6) * 30) / 30;
-      const words = s.narration.split(/\s+/);
-      const cues = [];
-      for (let word = 0; word < words.length; word += 11) {
-        const end = Math.min(word + 11, words.length);
-        cues.push({
-          start: (seconds * word) / words.length,
-          duration: (seconds * (end - word)) / words.length,
-          narration: words.slice(word, end).join(" "),
-        });
-      }
       timeline.push({
         ...s,
         takeaway: s.takeaway || s.title,
         start,
-        duration,
-        cues,
-        captionTiming: "estimated from narration duration",
+        ...timing,
       });
-      start += duration;
+      start += timing.duration;
     }
     await writeJson(path.join(work, "timeline.json"), timeline);
     await update({
