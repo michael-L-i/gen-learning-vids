@@ -51,7 +51,14 @@ export async function renderBrowser(
       return {
         executable,
         packages: Object.fromEntries(
-          ["three", "animejs", "@rdkit/rdkit", "playwright"].map((n) => [
+          [
+            "three",
+            "animejs",
+            "@rdkit/rdkit",
+            "playwright",
+            "vexflow",
+            "tone",
+          ].map((n) => [
             n,
             JSON.parse(
               require("node:fs").readFileSync(

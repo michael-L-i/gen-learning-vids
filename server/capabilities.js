@@ -34,6 +34,9 @@ export async function visualCapabilities(library) {
         "three",
         "@rdkit/rdkit",
         "d3-geo",
+        "vexflow",
+        "tone",
+        "@lesson-library/music",
         "@lesson-library/physics",
         "@lesson-library/math",
         "@lesson-library/circuits",
@@ -42,6 +45,15 @@ export async function visualCapabilities(library) {
         "@lesson-library/algorithms",
       ],
       modules: {
+        music: {
+          import: "@lesson-library/music",
+          guidance: "references/music.md",
+          features: [
+            "VexFlow notation and stable note highlights",
+            "shared timed musical events",
+            "Tone.js offline sound mixed with narration",
+          ],
+        },
         physics: {
           import: "@lesson-library/physics",
           guidance: "references/physics.md",

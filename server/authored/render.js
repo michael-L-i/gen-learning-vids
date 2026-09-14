@@ -183,7 +183,7 @@ export async function renderAuthored(
       progress: 25,
     });
     progress(adapter.stage);
-    await adapter.render({
+    const rendered = await adapter.render({
       module: path.join(work, "source", entrypoint),
       timeline: path.join(work, "timeline.json"),
       output: work,
@@ -203,6 +203,26 @@ export async function renderAuthored(
         throw new Error(
           `Chapter ${i + 1} has invalid video dimensions, fps or timing`,
         );
+      const audioFile = rendered?.audioFiles?.[i];
+      if (
+        audioFile &&
+        (typeof audioFile !== "string" ||
+          path.basename(audioFile) !== audioFile ||
+          !audioFile.endsWith(".wav"))
+      )
+        throw new Error("Renderer audio files must be local WAV basenames");
+      const audioArgs = audioFile
+        ? [
+            "-i",
+            path.join(work, audioFile),
+            "-filter_complex",
+            "[1:a]apad[narration];[2:a]apad[music];[narration][music]amix=inputs=2:duration=longest:dropout_transition=0:normalize=0,alimiter=limit=0.95:level=false:latency=true[mixed]",
+            "-map",
+            "0:v:0",
+            "-map",
+            "[mixed]",
+          ]
+        : ["-map", "0:v:0", "-map", "1:a:0", "-af", "apad"];
       await run("ffmpeg", [
         "-y",
         "-v",
@@ -211,12 +231,7 @@ export async function renderAuthored(
         visual,
         "-i",
         path.join(work, `speech-${i}.wav`),
-        "-map",
-        "0:v:0",
-        "-map",
-        "1:a:0",
-        "-af",
-        "apad",
+        ...audioArgs,
         "-c:v",
         "copy",
         "-c:a",
