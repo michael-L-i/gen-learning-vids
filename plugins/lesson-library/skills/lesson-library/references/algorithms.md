@@ -59,7 +59,9 @@ O(V × number of events), beyond ordinary BFS's O(V+E) adjacency traversal.
 Do not imply that this illustrative trace implementation is a benchmark.
 
 `traceAt(trace,time,{secondsPerStep=1})` offers uniform random-access playback,
-clamping before/after the trace. Time must be finite and step duration positive.
+clamping before/after the trace. Time must be finite and step duration positive. Quotients within
+`4 * Number.EPSILON * max(1, abs(time/secondsPerStep))` of an integer
+are treated as that boundary to absorb division roundoff.
 For narration, prefer event selection tied to `context.beats` over uniform pacing:
 one meaningful state change may need much more explanation than another.
 `discoveredPath(snapshot,target)` follows parent IDs back to the start, returning

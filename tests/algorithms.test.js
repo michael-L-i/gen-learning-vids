@@ -236,3 +236,21 @@ test("invalid graphs, weighted inputs, geometry and resource limits fail clearly
     /snapshot cells/,
   );
 });
+
+test("uniform playback selects exact frame boundaries without consuming earlier times", () => {
+  const trace = {
+    steps: Array.from({ length: 200 }, (_, index) => ({ index })),
+  };
+  assert.equal(traceAt(trace, 0.3, { secondsPerStep: 0.1 }).index, 3);
+  for (let index = 0; index < 200; index++) {
+    assert.equal(
+      traceAt(trace, index / 30, { secondsPerStep: 1 / 30 }).index,
+      index,
+    );
+    if (index > 0)
+      assert.equal(
+        traceAt(trace, index / 30 - 1e-7, { secondsPerStep: 1 / 30 }).index,
+        index - 1,
+      );
+  }
+});
