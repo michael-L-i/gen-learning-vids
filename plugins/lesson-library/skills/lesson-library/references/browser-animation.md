@@ -109,3 +109,8 @@ answer or a label disappearing at a transition. Play the final MP4.
 The shared pipeline validates dimensions, frame rate, audio and decode, but does
 not certify scientific content or native browser label layout. Report actual
 render time separately from authoring, TTS and first-use downloads.
+
+For 2D linear maps, `@lesson-library/math` supplies stable grid/point identities,
+transformed basis vectors and unit-cell geometry, matrix composition and
+interpolation, and signed determinant/area measurements. See
+[linear transformations](math-animation.md) for coordinate conventions and limits.
