@@ -39,14 +39,20 @@ export function rcStep({
   finite(initialVoltage, "initialVoltage");
   finite(sourceVoltage, "sourceVoltage");
   const tau = positive(resistance * capacitance, "time constant");
+  const delta = finite(sourceVoltage - initialVoltage, "voltage step");
   return {
     tau,
     at(seconds) {
       finite(seconds, "seconds");
       if (seconds < 0) throw new Error("seconds must be nonnegative");
-      const resistorVoltage =
-        (sourceVoltage - initialVoltage) * Math.exp(-seconds / tau);
-      const voltage = sourceVoltage - resistorVoltage;
+      const elapsed = seconds / tau;
+      const resistorVoltage = delta * Math.exp(-elapsed);
+      // Avoid subtracting nearly equal large voltages at the initial condition;
+      // retain the decaying tail without cancellation for late discharge.
+      const voltage =
+        elapsed < 0.5
+          ? initialVoltage + delta * -Math.expm1(-elapsed)
+          : sourceVoltage - resistorVoltage;
       const current = resistorVoltage / resistance;
       const charge = capacitance * voltage;
       const energy = 0.5 * capacitance * voltage * voltage;
@@ -112,14 +118,20 @@ export function solveDC({ nodes, fixed, resistors }) {
       if (!index.has(n)) continue;
       const i = index.get(n),
         g = 1 / r.resistance;
-      a[i][i] += g;
-      if (index.has(other)) a[i][index.get(other)] -= g;
-      else a[i][size] += g * known.get(other);
+      a[i][i] = finite(a[i][i] + g, "aggregate conductance");
+      if (index.has(other))
+        a[i][index.get(other)] = finite(
+          a[i][index.get(other)] - g,
+          "aggregate conductance",
+        );
+      else
+        a[i][size] = finite(a[i][size] + g * known.get(other), "nodal current");
     }
   // Scale rows before partial-pivot elimination, so uniform resistance scale is irrelevant.
   for (const row of a) {
     const scale = Math.max(...row.slice(0, size).map(Math.abs));
-    for (let j = 0; j <= size; j++) row[j] /= scale;
+    for (let j = 0; j <= size; j++)
+      row[j] = finite(row[j] / scale, "scaled equation");
   }
   for (let k = 0; k < size; k++) {
     let pivot = k;
@@ -129,11 +141,13 @@ export function solveDC({ nodes, fixed, resistors }) {
       throw new Error("Ill-conditioned resistor network");
     [a[k], a[pivot]] = [a[pivot], a[k]];
     const divisor = a[k][k];
-    for (let j = k; j <= size; j++) a[k][j] /= divisor;
+    for (let j = k; j <= size; j++)
+      a[k][j] = finite(a[k][j] / divisor, "normalized equation");
     for (let i = 0; i < size; i++)
       if (i !== k) {
         const factor = a[i][k];
-        for (let j = k; j <= size; j++) a[i][j] -= factor * a[k][j];
+        for (let j = k; j <= size; j++)
+          a[i][j] = finite(a[i][j] - factor * a[k][j], "eliminated equation");
       }
   }
   const potentials = Object.fromEntries(
@@ -155,8 +169,14 @@ export function solveDC({ nodes, fixed, resistors }) {
   });
   const netOutflow = Object.fromEntries(nodes.map((n) => [n, 0]));
   for (const r of branches) {
-    netOutflow[r.a] += r.current;
-    netOutflow[r.b] -= r.current;
+    netOutflow[r.a] = finite(
+      netOutflow[r.a] + r.current,
+      "aggregate node current",
+    );
+    netOutflow[r.b] = finite(
+      netOutflow[r.b] - r.current,
+      "aggregate node current",
+    );
   }
   return { potentials, branches, netOutflow };
 }
@@ -180,10 +200,14 @@ export function circuitSymbol({
   id(nodeB);
   a = point(a);
   b = point(b);
-  const length = Math.hypot(b.x - a.x, b.y - a.y);
+  const dx = finite(b.x - a.x, "terminal x span"),
+    dy = finite(b.y - a.y, "terminal y span"),
+    length = finite(Math.hypot(dx, dy), "terminal distance"),
+    centerX = finite(a.x / 2 + b.x / 2, "symbol midpoint x"),
+    centerY = finite(a.y / 2 + b.y / 2, "symbol midpoint y");
   if (length < 64)
     throw new Error("Symbol terminals must be at least 64 units apart");
-  const angle = (Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI,
+  const angle = (Math.atan2(dy, dx) * 180) / Math.PI,
     mid = length / 2;
   const line = (x1, y1, x2, y2) => `<path d="M${x1} ${y1} L${x2} ${y2}"/>`;
   let body;
@@ -208,15 +232,15 @@ export function circuitSymbol({
     kind === "voltageSource"
       ? [-11, 11]
           .map((offset, i) => {
-            const x = (a.x + b.x) / 2 + (offset * (b.x - a.x)) / length;
-            const y = (a.y + b.y) / 2 + (offset * (b.y - a.y)) / length;
+            const x = finite(centerX + offset * (dx / length), "polarity x");
+            const y = finite(centerY + offset * (dy / length), "polarity y");
             return `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" fill="${escape(color)}" font-family="sans-serif" font-size="20">${i ? "−" : "+"}</text>`;
           })
           .join("")
       : "";
   return {
     terminals: { a: { ...a, node: nodeA }, b: { ...b, node: nodeB } },
-    svg: `<g data-component="${escape(identity)}" stroke="${escape(color)}" stroke-width="3" fill="none"><g transform="translate(${a.x} ${a.y}) rotate(${angle})">${body}</g></g>${polarity}${label ? `<text x="${(a.x + b.x) / 2}" y="${(a.y + b.y) / 2 - 36}" text-anchor="middle" fill="${escape(color)}">${escape(label)}</text>` : ""}`,
+    svg: `<g data-component="${escape(identity)}" stroke="${escape(color)}" stroke-width="3" fill="none"><g transform="translate(${a.x} ${a.y}) rotate(${angle})">${body}</g></g>${polarity}${label ? `<text x="${centerX}" y="${finite(centerY - 36, "label y")}" text-anchor="middle" fill="${escape(color)}">${escape(label)}</text>` : ""}`,
   };
 }
 
@@ -224,6 +248,10 @@ export function circuitWire({ from, to, via = [], color = "#243444" }) {
   if (id(from.node) !== id(to.node))
     throw new Error("A wire must connect terminals on the same declared node");
   const points = [from, ...via, to].map(point);
+  for (let i = 1; i < points.length; i++) {
+    finite(points[i].x - points[i - 1].x, "wire x span");
+    finite(points[i].y - points[i - 1].y, "wire y span");
+  }
   return `<polyline data-node="${escape(from.node)}" points="${points.map((p) => `${p.x},${p.y}`).join(" ")}" fill="none" stroke="${escape(color)}" stroke-width="3"/>`;
 }
 
@@ -254,12 +282,21 @@ export function signalTrace({
     throw new Error("Invalid signal domain, range or sample count");
   if (typeof signal !== "function")
     throw new Error("signal must be a function");
+  const timeSpan = positive(end - start, "signal time span"),
+    valueSpan = positive(max - min, "signal value span");
   return Array.from({ length: samples }, (_, i) => {
-    const t = start + ((end - start) * i) / (samples - 1),
+    const fraction = i / (samples - 1);
+    const t = finite(
+        i === samples - 1 ? end : start + timeSpan * fraction,
+        "sample time",
+      ),
       v = finite(signal(t), "signal value");
     return [
-      (width * i) / (samples - 1),
-      height * (1 - (v - min) / (max - min)),
+      finite(width * fraction, "trace x"),
+      finite(
+        height * (1 - finite(v - min, "signal offset") / valueSpan),
+        "trace y",
+      ),
     ].join(",");
   }).join(" ");
 }

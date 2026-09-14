@@ -154,3 +154,93 @@ test("coupled unknown nodes solve independently of uniform resistance scale", ()
     near(result.potentials.b, 3);
   }
 });
+test("RC preserves initial and near-zero voltage without subtractive cancellation", () => {
+  const model = rcStep({
+    resistance: 1,
+    capacitance: 1,
+    initialVoltage: 1,
+    sourceVoltage: 1e16,
+  });
+  assert.equal(model.at(0).voltage, 1);
+  assert.equal(model.at(1e-16).voltage, 2);
+  const small = rcStep({ resistance: 1, capacitance: 1, sourceVoltage: 5 });
+  assert.ok(Math.abs(small.at(1e-20).voltage / 5e-20 - 1) < 1e-15);
+  assert.throws(
+    () =>
+      rcStep({
+        resistance: 1,
+        capacitance: 1,
+        initialVoltage: -1e308,
+        sourceVoltage: 1e308,
+      }),
+    /voltage step/,
+  );
+});
+test("signal traces reject unrepresentable spans and coordinates but avoid intermediate overflow", () => {
+  const base = {
+    signal: () => 0,
+    start: 0,
+    end: 1,
+    min: 0,
+    max: 1,
+    width: 100,
+    height: 50,
+    samples: 3,
+  };
+  assert.throws(
+    () => signalTrace({ ...base, min: -1e308, max: 1e308 }),
+    /value span/,
+  );
+  assert.throws(
+    () => signalTrace({ ...base, start: -1e308, end: 1e308 }),
+    /time span/,
+  );
+  assert.throws(
+    () => signalTrace({ ...base, signal: () => 1e308, height: 1e308 }),
+    /trace y/,
+  );
+  assert.equal(
+    signalTrace({ ...base, width: 1e308 }),
+    "0,50 5e+307,50 1e+308,50",
+  );
+});
+test("DC rejects nonrepresentable aggregate currents and conductance", () => {
+  const resistors = [
+    { id: "r1", a: "a", b: "b", resistance: 1e-308 },
+    { id: "r2", a: "a", b: "b", resistance: 1e-308 },
+  ];
+  assert.throws(
+    () => solveDC({ nodes: ["a", "b"], fixed: { a: 1, b: 0 }, resistors }),
+    /aggregate node current/,
+  );
+  assert.throws(
+    () => solveDC({ nodes: ["a", "b"], fixed: { a: 1 }, resistors }),
+    /aggregate conductance/,
+  );
+});
+test("geometry rejects nonrepresentable spans and keeps large finite source coordinates valid", () => {
+  const base = {
+    kind: "voltageSource",
+    id: "v",
+    a: { x: -1e308, y: 0 },
+    b: { x: 1e308, y: 0 },
+    nodeA: "a",
+    nodeB: "b",
+  };
+  assert.throws(() => circuitSymbol(base), /terminal x span/);
+  assert.throws(
+    () =>
+      circuitWire({
+        from: { ...base.a, node: "n" },
+        to: { ...base.b, node: "n" },
+      }),
+    /wire x span/,
+  );
+  const valid = circuitSymbol({
+    ...base,
+    a: { x: 1e308, y: 0 },
+    b: { x: 1e308, y: 100 },
+    label: "V",
+  });
+  assert.doesNotMatch(valid.svg, /Infinity|NaN/);
+});

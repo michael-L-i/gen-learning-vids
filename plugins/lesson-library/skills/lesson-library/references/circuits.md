@@ -26,7 +26,8 @@ from an empty profile. No numbered progress footer is required.
 - `rcStep({resistance,capacitance,sourceVoltage,initialVoltage=0})` returns `tau`
   in seconds and `at(seconds)` for nonnegative time: voltage across capacitor,
   series current entering its positive terminal, resistorVoltage, charge in
-  coulombs and energy in joules. SI inputs. Ideal constant R, C and source after
+  coulombs and energy in joules. Initial/near-zero voltage uses a stable
+  exponential increment. SI inputs. Ideal constant R, C and source after
   a single step at time zero; no parasitics or pre-step solution. Discharge
   current can be negative. It is an independent analytic model, not derived from
   the SVG/netlist.
@@ -50,3 +51,7 @@ voltage; keep voltage polarity and current reference visible. Verify initial
 condition, one time constant, KVL, capacitor law and limiting behavior.
 
 Scientific reference: [OpenStax, University Physics 2, RC circuits](https://openstax.org/books/university-physics-volume-2/pages/10-5-rc-circuits).
+
+Inputs and derived spans, coordinates, states and aggregate currents must be
+representable as finite JavaScript numbers. Nonrepresentable calculations are
+rejected explicitly; this does not provide arbitrary-precision arithmetic.
