@@ -1,5 +1,10 @@
 # Browser animation capabilities
 
+[Chemistry helpers](chemistry-animation.md) provide molecular diagrams, stable
+atom tracking and electron-flow arrows. Optional measured narration beats align
+explanatory stages with separately synthesized audio; word positions within a
+beat remain estimated.
+
 The default authored browser route bundles Three.js, Anime.js and RDKit.js with
 the app's npm dependencies. It supports 2D/3D composition without Blender or a
 Python environment. A managed Chromium runtime downloads on first render; the

@@ -25,6 +25,11 @@ export async function renderBrowserScenes({
     platform: "browser",
     outfile: path.join(runtime, "scene.js"),
     nodePaths: [modules],
+    alias: {
+      "@lesson-library/chemistry": fileURLToPath(
+        new URL("../chemistry/diagram.js", import.meta.url),
+      ),
+    },
     logLevel: "silent",
   });
   // The WASM build exposes a browser initializer. No Python or external chemistry app.

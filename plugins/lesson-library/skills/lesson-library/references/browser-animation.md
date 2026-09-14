@@ -60,6 +60,16 @@ mol.delete();
 Use verified structures and correct protonation conventions. RDKit's browser
 build is a subset of Python RDKit, not a general reaction simulator.
 
+For chemistry tasks, import `moleculeDiagram`, `chemicalChanges`,
+`chemicalAnchor`, and `electronArrow` from `@lesson-library/chemistry`. Supply
+reviewed SMILES/MOL structures plus unique atom IDs in input order. Returned
+SVGs and atom anchors share coordinates; preserve those IDs across reaction
+steps. Arrows may target atoms, existing bonds, or a `formingBond` between
+unbonded atoms. Use `electrons:1` only for a single-electron fishhook.
+See the repository's `docs/chemistry-animation.md` for the full helper contract.
+Check source diagrams and each intermediate; graph validation does not certify
+chemical correctness. Use measured beats and review every chemical change.
+
 ## Quality and performance
 
 Prefer detailed vector artwork or data-derived structures when morphology

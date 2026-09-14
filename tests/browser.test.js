@@ -64,11 +64,13 @@ test("browser renders SVG, Anime.js, RDKit WASM and Three.js into shared, timed 
     path.join(source, "scene.js"),
     `
  import * as THREE from 'three';import {createTimeline} from 'animejs';
+ import {moleculeDiagram} from '@lesson-library/chemistry';
  export async function buildScene(root,ctx){
   const key=t=>Math.round(t*30)%2;
   if(ctx.index===0){
-   const rd=await window.initRDKitModule({locateFile:n=>ctx.rdkitUrl+n});const mol=rd.get_mol('CC(=O)O');
-   root.innerHTML='<div style="position:absolute;left:600px">'+mol.get_svg()+'</div><div id="marker" style="position:absolute;width:100px;height:100px;background:red"></div>';mol.delete();
+   const rd=await window.initRDKitModule({locateFile:n=>ctx.rdkitUrl+n});
+   const diagram=moleculeDiagram(rd,{structure:'CC(=O)O',atomIds:['methyl','carbonyl','oxygen','hydroxyl']});
+   root.innerHTML='<div style="position:absolute;left:600px">'+diagram.svg+'</div><div id="marker" style="position:absolute;width:100px;height:100px;background:red"></div>';
    const tl=createTimeline({autoplay:false}).add('#marker',{x:[0,300],duration:1000,ease:'linear'});
    return {frameKey:key,update(t){tl.seek(key(t)*1000);}};
   }
