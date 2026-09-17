@@ -12,6 +12,7 @@ import { api, post } from "../api.js";
 import { fileUrl, time } from "../format.js";
 import { ErrorMessage } from "../components/ui.jsx";
 import { Chat } from "./Chat.jsx";
+import { VideoPlayer } from "./VideoPlayer.jsx";
 
 export function LessonDetail({ id, onBack, onCreate }) {
   const [lesson, setLesson] = useState(null),
@@ -38,12 +39,7 @@ export function LessonDetail({ id, onBack, onCreate }) {
       clearInterval(t);
     };
   }, [id]);
-  const seek = (t) => {
-    if (player.current) {
-      player.current.currentTime = t;
-      player.current.play().catch(() => {});
-    }
-  };
+  const seek = (t) => player.current?.seek(t);
   const retry = async () => {
     setRetrying(true);
     try {
@@ -80,24 +76,15 @@ export function LessonDetail({ id, onBack, onCreate }) {
       <div className="lesson-layout">
         <div className="lesson-content">
           {lesson.status === "ready" ? (
-            <video
+            <VideoPlayer
               key={id}
               ref={player}
-              className="video-player"
-              controls
-              playsInline
-              preload="metadata"
+              src={fileUrl(id, "video.mp4")}
               poster={fileUrl(id, "thumbnail.png")}
-              onTimeUpdate={(e) => setSeconds(e.target.currentTime)}
-            >
-              <source src={fileUrl(id, "video.mp4")} type="video/mp4" />
-              <track
-                kind="captions"
-                src={fileUrl(id, "captions.vtt")}
-                srcLang="en"
-                label="English (approximate timing)"
-              />
-            </video>
+              captions={fileUrl(id, "captions.vtt")}
+              chapters={lesson.scenes}
+              onTimeUpdate={setSeconds}
+            />
           ) : (
             <div className={`generation-player ${lesson.style}`}>
               <h2>{lesson.stage}</h2>
