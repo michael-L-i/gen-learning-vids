@@ -59,27 +59,54 @@ The browser serves only local snapshot/runtime assets during capture and denies 
 
 For example, a mechanism lesson can combine Rapier simulation samples, Three.js cutaways, force arrows, and graphs driven by the same timeline. A protein lesson can combine a local structure, named selections, a camera transition, and measured atom labels.
 
-Today, browser aliases, capability metadata, and dependency-version reporting are registered in separate files. When extending an existing helper, inspect its tests and reference. A new module also needs the appropriate registrations in `server/browser/host.js`, `server/capabilities.js`, and `server/browser/render.js`, plus its reference link. A single generated registry is a possible future improvement, not implemented behavior.
+When extending an existing helper, inspect its tests and reference. The full module list and the registration steps for a new module are in [Code boundaries](#code-boundaries). A single generated registry is a possible future improvement, not implemented behavior.
 
 ## Code boundaries
 
+Engine and interface files:
+
 | Responsibility | Files |
 |---|---|
-| Local HTTP interface / CLI | `server/app.js`, `bin/learnvid.js` |
+| Local HTTP interface | `server/app.js` (loopback-only Express app, speech previews, imports, lesson files) |
+| CLI | `bin/learnvid.js` (serve, create, render-*, import, settings, doctor) |
+| Electron shell | `desktop/main.cjs` (starts the same server on a random port and opens it in a window) |
+| Browser UI | `src/` (React app built with Vite, served by the same server) |
 | Lesson creation, jobs, retries, saved Q&A | `server/engine.js` |
-| Atomic storage, locks, settings, profile | `server/store.js` |
+| Atomic storage, locks, settings, profile | `server/store.js`, `server/schema.js` |
 | Imports and context normalization | `server/imports.js` |
-| Provider adapters, planner and tutor prompts | `server/providers.js` |
+| Provider adapters, planner and tutor prompts | `server/providers.js`, `server/process.js` |
 | Teaching metadata, revision validation, shared guidance | `server/teaching.js`, `plugins/lesson-library/skills/lesson-library/references/teaching.md` |
-| Structured visual rendering and captions | `server/render.js`, `server/visuals.js` |
-| Validated SVG scene graph and timed tracks | `server/animation/` |
+| Structured visual rendering and captions | `server/render.js`, `server/visuals.js`, `server/visual-utils.js` |
+| Validated SVG scene graph, timed tracks, clip prompts | `server/animation/` |
 | Shared authored manifests, source snapshots, narration, encoding, publication | `server/authored/` |
 | Browser bundling, capture, optional PCM export | `server/browser/` |
 | Capability discovery | `server/capabilities.js` |
-| Subject tools | `server/chemistry/`, `server/physics/`, `server/molecular/`, and other module folders listed in the [README](../README.md#visual-tools) |
 | Image retrieval, normalization, attribution | `server/assets.js`, `server/asset-schema.js` |
 | Optional external renderers | `server/blender/`, `server/scientific/` |
-| Speech synthesis and caching | `server/speech.js` |
+| Speech synthesis and caching | `server/speech.js`, `server/speech-options.js` |
+
+Subject modules. Each browser module is imported in authored `scene.js` under the `@lesson-library/` alias and documented by a reference in `plugins/lesson-library/skills/lesson-library/references/`. Two folders are not browser modules: `server/geography/` feeds globe nodes in the structured animation route, and `server/chemistry/` is aliased from its `diagram.js` file.
+
+| Folder | Import | Guide | What it provides |
+|---|---|---|---|
+| `server/algorithms/` | `@lesson-library/algorithms` | [algorithms](../plugins/lesson-library/skills/lesson-library/references/algorithms.md) | Graph models, breadth-first traces, time-indexed snapshots, stable node and queue layouts |
+| `server/chemistry/` | `@lesson-library/chemistry` | [chemistry](chemistry-animation.md) | RDKit molecule diagrams, atom anchors, change detection, electron-flow arrows |
+| `server/circuits/` | `@lesson-library/circuits` | [circuits](../plugins/lesson-library/skills/lesson-library/references/circuits.md) | RC step response, DC nodal solve, circuit symbols, wires, signal traces |
+| `server/constructions/` | `@lesson-library/constructions` | [constructions](../plugins/lesson-library/skills/lesson-library/references/constructions.md) | JSXGraph boards, constrained triangles, secants and tangents, Riemann sums |
+| `server/diagrams/` | `@lesson-library/diagrams` | [diagrams](../plugins/lesson-library/skills/lesson-library/references/diagrams.md) | ELK layered layouts, shared-layout comparisons, deterministic SVG reveals |
+| `server/geography/` | structured `globe` nodes | [geography](geography-animation.md) | Natural Earth country catalog, globe projections, country points, globe SVG |
+| `server/inspection/` | `@lesson-library/inspection` | [inspection](../plugins/lesson-library/skills/lesson-library/references/inspection.md) | OpenSeadragon image regions, DOM Range text spans, source references, image preparation |
+| `server/maps-flows/` | `@lesson-library/maps-flows` | [maps and flows](../plugins/lesson-library/skills/lesson-library/references/maps-flows.md) | D3 geographic maps, UTC timelines, Sankey-style quantitative flows |
+| `server/math/` | `@lesson-library/math` | [math](../plugins/lesson-library/skills/lesson-library/references/math.md) | 2D linear transformations, composition, interpolation, determinants |
+| `server/molecular/` | `@lesson-library/molecular` | [molecular](../plugins/lesson-library/skills/lesson-library/references/molecular.md) | Mol* and MolViewSpec structures, named selections, camera transitions, distances |
+| `server/music/` | `@lesson-library/music` | [music](../plugins/lesson-library/skills/lesson-library/references/music.md) | VexFlow notation, timed phrases, Tone.js offline audio mixed with narration |
+| `server/physics/` | `@lesson-library/physics` | [physics](../plugins/lesson-library/skills/lesson-library/references/physics.md) | Oscillators, constant acceleration, frames, bodies, springs, pulleys, ramps, ropes |
+| `server/rigid-body/` | `@lesson-library/rigid-body` | [rigid bodies](../plugins/lesson-library/skills/lesson-library/references/rigid-body.md) | Rapier fixed-tick playback and pose, velocity, and energy samples |
+| `server/spatial/` | `@lesson-library/spatial` | [spatial](../plugins/lesson-library/skills/lesson-library/references/spatial.md) | Three.js convex cutaways and exploded assemblies |
+| `server/statistics/` | `@lesson-library/statistics` | [statistics](../plugins/lesson-library/skills/lesson-library/references/statistics.md) | Seeded sampling, discrete distributions, histograms, conditional frequencies |
+| `server/waves/` | `@lesson-library/waves` | [waves](../plugins/lesson-library/skills/lesson-library/references/waves.md) | Plane waves, superposition, field sampling, point-charge fields, ray interfaces |
+
+Adding a browser module today touches four places: the `@lesson-library/` alias in `server/browser/host.js`, the `libraries` and `modules` entries in `server/capabilities.js` (which also point at the guide), dependency-version reporting in `server/browser/render.js`, and a new reference file next to the others. Add a test under `tests/` named after the folder; browser-backed tests are gated by `LEARNVID_BROWSER_TEST=1`.
 
 ## Teaching, timing, and review
 
