@@ -45,7 +45,7 @@
     "proper-lockfile": "^4.1.2",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "sharp": "^0.34.5",
+    "sharp": "^0.35.4",
     "svg-path-properties": "2.1.0",
     "three": "^0.186.0",
     "tone": "^15.1.22",
@@ -117,5 +117,11 @@
   "homepage": "https://github.com/michael-L-i/gen-learning-vids#readme",
   "bugs": {
     "url": "https://github.com/michael-L-i/gen-learning-vids/issues"
+  },
+  "overrides": {
+    "sharp": "^0.35.4",
+    "mathjax-full": {
+      "@xmldom/xmldom": "^0.9.12"
+    }
   }
 }

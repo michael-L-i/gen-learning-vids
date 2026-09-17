@@ -23,6 +23,15 @@ npm run check
 
 Use `npm ci` for an existing lockfile. When intentionally changing dependencies, update both `package.json` and `package-lock.json` with npm. Do not share `node_modules` between worktrees with different dependency sets.
 
+### Dependencies and audit
+
+Run `npm audit` after changing dependencies. The `overrides` block in `package.json` pins transitive packages whose parents have not picked up a fix yet; keep an override only until the parent range includes the fixed version, then remove it:
+
+- `sharp` is held at 0.35.4 or newer for the copy under `@huggingface/transformers` (libvips and libheif advisories). Kokoro speech was verified against it.
+- `@xmldom/xmldom` is held at 0.9.12 or newer under `mathjax-full`. Equation rendering uses MathJax's lite adaptor, not xmldom, so this only affects the unused speech-rule-engine path.
+
+Accepted findings, not fixed: `electron` and its `extract-zip` dependency report advisories that require moving from Electron 38 to 41. Both are development-only packaging dependencies; the fix is a separate change that must re-verify the DMG build.
+
 Render the [first-scene example](examples/first-scene/README.md) to exercise narration, browser capture, encoding, and saved lesson output without a model-provider login. It uses public, original source files and a separate library directory.
 
 ## Run the app with disposable data
