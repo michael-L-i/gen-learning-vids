@@ -72,7 +72,7 @@ Run commands from the repository root. Tests use temporary libraries and fixture
 
 Optional external-renderer checks use `LEARNVID_BLENDER=/path/to/blender` or `LEARNVID_SCIENTIFIC_PYTHON=/path/to/python`; see their [Blender](docs/blender-rendering.md) and [scientific](docs/scientific-animation.md) guides. Missing optional dependencies are reported as skips. Never require a provider login in default CI.
 
-GitHub Actions is currently **manual-only**. Contributors should include local results; maintainers can run the workflow from Actions when needed. This guide does not enable automatic CI or change notification settings.
+GitHub Actions runs the Check workflow for pull requests into `main` and for pushes to `main`, including the browser module tests. Pushes to other branches do not trigger it; maintainers can start a run from Actions when needed. Include local results in the PR for any optional checks.
 
 ## Review a visual change
 

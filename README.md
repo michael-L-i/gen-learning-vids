@@ -104,7 +104,7 @@ LEARNVID_BROWSER_TEST=1 npm run check  # include real browser/module checks
 npm run test:ui                 # app interaction tests
 ```
 
-GitHub Actions currently runs **manually**. Run the relevant checks locally and include the results in your PR. Provider-dependent checks are opt-in. New browser modules have been exercised in a source checkout; distributed Electron DMGs and non-macOS platforms need further validation.
+GitHub Actions runs the checks above, including the browser module tests, for pull requests into `main` and for pushes to `main`. Pushes to other branches do not trigger a run. Provider-dependent checks stay opt-in. New browser modules have been exercised in a source checkout; distributed Electron DMGs and non-macOS platforms need further validation.
 
 ## Data and licensing
 
