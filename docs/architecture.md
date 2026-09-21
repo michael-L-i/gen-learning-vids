@@ -32,7 +32,7 @@ The coding agent selects tools and writes executable scene code. The ordinary ap
 
 1. `createLesson` validates the request and snapshots the learner profile, conversation brief, selected source excerpts, and settings. Sources are selected explicitly and bounded in length; this is not background retrieval from an entire vault.
 2. The CLI/API starts a detached worker. `runJob` locks that lesson and records progress. It uses a supplied plan or calls the configured provider.
-3. `generatePlan` makes one draft call and one targeted revision call using the shared teaching guidance. Edits apply to a clone; the complete revised plan must pass the schema and narration/visual checks. A failed review does not silently publish the draft.
+3. `generatePlan` makes one draft call and one targeted revision call using the shared teaching and narration/reveal guidance. Both prompts state the visual-step constraints so review edits preserve valid reveal sequences. Edits apply to a clone; the complete revised plan must pass the schema and narration/visual checks. A failed review does not silently publish the draft.
 4. The renderer synthesizes narration and renders structured visuals or scene-graph animation. Scenes with beats use measured speech intervals and processing holds. Legacy plans remain supported with approximate evenly spaced reveals.
 5. FFmpeg encodes and joins the media. The engine saves the MP4, thumbnail, timed chapters, transcript, captions, citations, and ready/error status.
 

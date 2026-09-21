@@ -80,7 +80,9 @@ on an unstated inference, undefined symbol, vanished result or ambiguous pointer
 Check that the viewer can state the problem and follow what changes on screen;
 a labeled still diagram alone may not explain the motion under discussion.
 Give the hardest reasoning appropriate time, and check that the final question
-tests the objective without revealing its answer prematurely. Revise actual
+tests the objective without revealing its answer prematurely. Preserve the renderer's reveal constraints when revising beats: concept, comparison,
+and plot scenes keep every visualStep at 0; progressive visuals visit each supported
+reveal in order. Revise actual
 content and timing; a positive review label is not evidence of quality.
 
 Use a bounded loop: draft, focused revision, then inspect rendered evidence. Repeat
