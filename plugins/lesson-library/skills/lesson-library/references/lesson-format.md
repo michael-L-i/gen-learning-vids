@@ -36,6 +36,10 @@ For equations, code, diagrams, and plots, use the structured content formats in 
 
 Use concrete examples and resolve the learner's actual confusion. Avoid placing large equations, Markdown, tables, or code blocks in on-screen strings. Use optional `sources: [{title,url}]` for verified references. Do not invent citations.
 
+Revision edits must preserve the same narration and visual-step rules as the draft.
+Concept, comparison, and plot scenes use only visualStep 0, even with multiple
+narration beats; additional beats do not create new renderer reveals.
+
 ## Teaching and revision metadata
 
 Both structured and authored manifests accept optional `teaching` and `review`
